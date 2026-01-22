@@ -1,22 +1,77 @@
 const flavorlists = [
   {
-    name: "Choco Cookies",
-    color: "brown",
-    rotation: "md:rotate-[-8deg] rotate-0",
-  },
-  {
     name: "Milk Cookies",
     color: "blue",
     rotation: "md:rotate-[-8deg] rotate-0",
   },
   {
-    name: "Plum Cookies",
+    name: "Orange Cookies",
     color: "orange",
     rotation: "md:rotate-[8deg] rotate-0",
   },
   {
     name: "Butter Cookies",
     color: "white",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+  {
+    name: "Black Currant Cookies",
+    color: "black",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+  {
+    name: "Cran Berry Cookies",
+    color: "brown",
+    rotation: "md:rotate-[8deg] rotate-0",
+  },
+  {
+    name: "Fruit & Nuts Cookies",
+    color: "fruit",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+    {
+    name: "Rose Magic Cookies",
+    color: "red",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+  {
+    name: "Fruit Crums Cookies",
+    color: "crums",
+    rotation: "md:rotate-[8deg] rotate-0",
+  },
+    {
+    name: "Choco Chip Cookies",
+    color: "choco",
+    rotation: "md:rotate-[8deg] rotate-0",
+  },
+  {
+    name: "Butter Cookies",
+    color: "butter",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+  {
+    name: "Orange Cookies | Famliy",
+    color: "orangef",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+  {
+    name: "Wheat Grain Cookies",
+    color: "redw",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+  {
+    name: "Golden Grain Cookies",
+    color: "butterg",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+  {
+    name: "Milk Cookies | Famliy",
+    color: "milkf",
+    rotation: "md:rotate-[-8deg] rotate-0",
+  },
+  {
+    name: "Coffee Cookies",
+    color: "multic",
     rotation: "md:rotate-[-8deg] rotate-0",
   },
 ];
