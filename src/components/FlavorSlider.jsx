@@ -3,9 +3,11 @@ import { flavorlists } from "../constants";
 import gsap from "gsap";
 import { useRef } from "react";
 import { useMediaQuery } from "react-responsive";
+import { useNavigate } from "react-router-dom";
 
 const FlavorSlider = () => {
   const sliderRef = useRef();
+  const navigate = useNavigate();
 
   const isTablet = useMediaQuery({
     query: "(max-width: 1024px)",
@@ -51,7 +53,7 @@ const FlavorSlider = () => {
           xPercent: -22,
           ease: "power1.inOut",
         },
-        "<"
+        "<",
       )
       .to(
         ".second-text-split",
@@ -59,7 +61,7 @@ const FlavorSlider = () => {
           xPercent: -10,
           ease: "power1.inOut",
         },
-        "<"
+        "<",
       );
   });
 
@@ -68,8 +70,12 @@ const FlavorSlider = () => {
       <div className="flavors">
         {flavorlists.map((flavor) => (
           <div
-            key={flavor.name}
-            className={`relative z-30 lg:w-[50vw] w-96 lg:h-[70vh] md:w-[90vw] md:h-[50vh] h-80 flex-none ${flavor.rotation}`}
+            key={flavor.slug}
+            onClick={() => {
+              navigate(`/products/${flavor.slug}`);
+              window.scrollTo(0, 0);
+            }}
+            className={`cursor-pointer relative z-30 lg:w-[50vw] w-96 lg:h-[70vh] md:w-[90vw] md:h-[50vh] h-80 flex-none ${flavor.rotation}`}
           >
             <img
               src={`/images/${flavor.color}-bg.svg`}
@@ -77,18 +83,7 @@ const FlavorSlider = () => {
               className="absolute bottom-0"
             />
 
-            <img
-              src={`/small/${flavor.color}.png`}
-              alt=""
-              className="drinks"
-            />
-{/* 
-            <img
-              src={`/images/${flavor.color}-elements.webp`}
-              alt=""
-              className="elements"
-            /> */}
-
+            <img src={`/small/${flavor.color}.png`} alt="" className="drinks" />
             <h1>{flavor.name}</h1>
           </div>
         ))}

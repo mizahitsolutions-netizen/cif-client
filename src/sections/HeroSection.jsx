@@ -2,8 +2,14 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { SplitText } from "gsap/all";
 import { useMediaQuery } from "react-responsive";
+import { useNavigate } from "react-router-dom";
+
 
 const HeroSection = () => {
+
+    const navigate = useNavigate();
+
+
   const isMobile = useMediaQuery({
     query: "(max-width: 768px)",
   });
@@ -31,7 +37,7 @@ const HeroSection = () => {
           clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
           ease: "circ.out",
         },
-        "-=0.5"
+        "-=0.5",
       )
       .from(
         titleSplit.chars,
@@ -40,7 +46,7 @@ const HeroSection = () => {
           stagger: 0.02,
           ease: "power2.out",
         },
-        "-=0.5"
+        "-=0.5",
       );
 
     const heroTl = gsap.timeline({
@@ -109,9 +115,9 @@ const HeroSection = () => {
             brings back sweet memories.
           </h2>
 
-          <div className="hero-button">
-            <p>Grab a Cookie</p>
-          </div>
+          <button className="hero-button cursor-pointer" onClick={() => navigate("/products")}>
+            Grab a Cookie
+          </button>
         </div>
       </div>
     </section>

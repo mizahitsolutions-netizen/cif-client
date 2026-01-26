@@ -1,44 +1,41 @@
-import NavBar from "./components/NavBar";
+import { Routes, Route } from "react-router-dom";
+import MainLayout from "./layouts/MainLayout";
+
 import HeroSection from "./sections/HeroSection";
-import { ScrollSmoother, ScrollTrigger } from "gsap/all";
-import gsap from "gsap";
 import MessageSection from "./sections/MessageSection";
 import FlavorSection from "./sections/FlavorSection";
-import { useGSAP } from "@gsap/react";
-import NutritionSection from "./sections/NutritionSection";
 import BenefitSection from "./sections/BenefitSection";
-import TestimonialSection from "./sections/TestimonialSection";
-import FooterSection from "./sections/FooterSection";
+import ProductsPage from "./pages/Productlisitng";
+import ProductDetail from "./pages/ProductDetailpage";
+import CartPage from "./pages/CartPage";
+import Profile from "./pages/Profile";
+import Checkout from "./pages/Checkout";
+import PaymentPage from "./pages/PaymentPage";
+import OrderSuccess from "./pages/OrderSuccess";
 
-gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+const HomePage = () => (
+  <>
+    <HeroSection />
+    <MessageSection />
+    <FlavorSection />
+    <BenefitSection />
+  </>
+);
 
 const App = () => {
-  useGSAP(() => {
-    ScrollSmoother.create({
-      smooth: 3,
-      effects: true,
-    });
-  });
-
   return (
-    <main>
-      <NavBar />
-      <div id="smooth-wrapper">
-        <div id="smooth-content">
-          <HeroSection />
-          <MessageSection />
-          <FlavorSection />
-          {/* <NutritionSection /> */}
-
-          <div>
-            <BenefitSection />
-            {/* <TestimonialSection /> */}
-          </div>
-
-          <FooterSection />
-        </div>
-      </div>
-    </main>
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:slug" element={<ProductDetail />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/payment/:orderId" element={<PaymentPage />} />
+        <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+      </Route>
+    </Routes>
   );
 };
 
