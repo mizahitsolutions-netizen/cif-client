@@ -1,11 +1,17 @@
 import { useEffect, useRef } from "react";
 import { useCart } from "../context/CartContext";
 import gsap from "gsap";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useUI } from "../context/UIContext";
 
 const CartDrawer = ({ open, onClose }) => {
   const drawerRef = useRef(null);
   const overlayRef = useRef(null);
   const isFirstRender = useRef(true);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { openLogin } = useUI();
 
   const { cart, removeFromCart, updateQty } = useCart();
 
@@ -62,6 +68,20 @@ const CartDrawer = ({ open, onClose }) => {
     }
   }, [open]);
 
+  const handleCheckout = () => {
+    onClose();
+
+    if (!user) {
+      openLogin(); // 🔐 OPEN LOGIN MODAL
+      toast("Please login to continue", {
+        icon: "🔒",
+      });
+      return;
+    }
+
+    navigate("/checkout");
+  };
+
   return (
     <>
       {/* OVERLAY */}
@@ -80,7 +100,10 @@ const CartDrawer = ({ open, onClose }) => {
         {/* HEADER */}
         <div className="p-6 border-b flex items-center justify-between">
           <h2 className="text-xl font-semibold">Your Cart</h2>
-          <button onClick={onClose} className="text-xl font-bold cursor-pointer">
+          <button
+            onClick={onClose}
+            className="text-xl font-bold cursor-pointer"
+          >
             ✕
           </button>
         </div>
@@ -147,7 +170,10 @@ const CartDrawer = ({ open, onClose }) => {
             <span>₹{total}</span>
           </div>
 
-          <button className="w-full border border-black bg-black text-white py-3 rounded-xl hover:bg-white hover:text-black transition cursor-pointer">
+          <button
+            onClick={handleCheckout}
+            className="w-full border border-black bg-black text-white py-3 rounded-xl hover:bg-white hover:text-black transition cursor-pointer"
+          >
             Proceed to Checkout
           </button>
         </div>
