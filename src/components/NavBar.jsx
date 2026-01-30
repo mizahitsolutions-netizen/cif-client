@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from "react";
 import CartDrawer from "./CartDrawer";
 import AuthModal from "./AuthModal";
 import ProfileDropdown from "./ProfileDropdown";
+import { Link } from "react-router-dom";
 
 const NavBar = () => {
   const { cart, cartOpen, setCartOpen } = useCart();
@@ -35,11 +36,13 @@ const NavBar = () => {
       {/* ================= NAVBAR ================= */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-7 py-3">
         {/* LOGO */}
-        <img
-          src="/images/logo.png"
-          alt="Crumbella"
-          className="max-h-[56px] object-contain"
-        />
+        <Link to="/" aria-label="Go to home">
+          <img
+            src="/images/logo.png"
+            alt="Crumbella"
+            className="max-h-[56px] object-contain cursor-pointer"
+          />
+        </Link>
 
         {/* RIGHT ACTIONS */}
         <div className="flex items-center gap-5 relative">
