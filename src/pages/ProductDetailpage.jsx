@@ -1,13 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import {
-  doc,
-  getDoc,
-  collection,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 
 import gsap from "gsap";
@@ -20,16 +13,30 @@ import toast from "react-hot-toast";
 const ProductDetail = () => {
   const { slug } = useParams();
   const containerRef = useRef(null);
+  const navigate = useNavigate();
+
   const { user } = useAuth();
   const { openLogin } = useUI();
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  const { addToCart } = useCart();
-  const navigate = useNavigate();
+  /* ---------------- MINIMUM QTY RULE ---------------- */
+  const getMinimumQty = (packageType) => {
+    switch (packageType?.toLowerCase()) {
+      case "small":
+        return 10;
+      case "medium":
+        return 6;
+      case "family":
+        return 5;
+      default:
+        return 1;
+    }
+  };
 
   /* ---------------- FETCH PRODUCT ---------------- */
   useEffect(() => {
@@ -40,7 +47,13 @@ const ProductDetail = () => {
 
       if (!snap.empty) {
         const docSnap = snap.docs[0];
-        setProduct({ id: docSnap.id, ...docSnap.data() });
+        const data = { id: docSnap.id, ...docSnap.data() };
+
+        setProduct(data);
+
+        // ✅ AUTO-JUMP QTY TO MINIMUM
+        const minQty = getMinimumQty(data.packageType);
+        setQty(minQty);
       }
 
       setLoading(false);
@@ -49,7 +62,7 @@ const ProductDetail = () => {
     fetchProduct();
   }, [slug]);
 
-  /* ---------------- SET PAGE TITLE ---------------- */
+  /* ---------------- PAGE TITLE ---------------- */
   useEffect(() => {
     if (product?.name) {
       document.title = `${product.name} | Crumbella Innovative Foods`;
@@ -75,27 +88,34 @@ const ProductDetail = () => {
     fetchRelated();
   }, [product]);
 
+  /* ---------------- ACTIONS ---------------- */
   const handleAddToCart = () => {
     addToCart(product, qty);
-
     toast.success(`Added ${qty} × ${product.name}`);
   };
 
   const handleBuyNow = () => {
-    if (!user) {
-      openLogin(); // 🔐 OPEN LOGIN MODAL
-      toast("Please login to continue", {
-        icon: "🔒",
-      });
+    const minQty = getMinimumQty(product.packageType);
+
+    if (qty < minQty) {
+      toast.error(
+        `${product.packageType} pack requires minimum ${minQty} items`,
+      );
       return;
     }
+
+    if (!user) {
+      openLogin();
+      toast("Please login to continue", { icon: "🔒" });
+      return;
+    }
+
     addToCart(product, qty, { openDrawer: false });
-    // ✅ USER IS LOGGED IN → GO TO CHECKOUT
     navigate("/checkout");
     window.scrollTo(0, 0);
   };
 
-  /* ---------------- GSAP ANIMATION ---------------- */
+  /* ---------------- GSAP ---------------- */
   useGSAP(() => {
     gsap.from(containerRef.current, {
       opacity: 0,
@@ -113,9 +133,11 @@ const ProductDetail = () => {
     return <p className="text-center mt-24">Product not found</p>;
   }
 
+  const minQty = getMinimumQty(product.packageType);
+
   return (
     <section ref={containerRef} className="max-w-7xl mx-auto px-4 py-25">
-      {/* ================= BREADCRUMB ================= */}
+      {/* BREADCRUMB */}
       <nav className="text-sm text-gray-400 mb-6">
         <Link to="/" className="hover:text-black">
           Home
@@ -128,7 +150,7 @@ const ProductDetail = () => {
         <span className="text-black font-medium">{product.name}</span>
       </nav>
 
-      {/* ================= PRODUCT ================= */}
+      {/* PRODUCT */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* IMAGE */}
         <div className="bg-gradient-to-br from-orange-50 to-white rounded-3xl p-10 flex items-center justify-center">
@@ -150,6 +172,7 @@ const ProductDetail = () => {
               {product.name}
             </h1>
           </div>
+
           <div>
             <p className="text-gray-600 leading-relaxed mb-8">
               {product.description}
@@ -157,19 +180,18 @@ const ProductDetail = () => {
 
             <div className="flex items-center gap-6 mb-8">
               <span className="text-3xl font-semibold">₹{product.price}</span>
-
               <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
                 {product.quantity} in stock
               </span>
             </div>
 
             {/* QUANTITY */}
-            <div className="flex items-center gap-4 mb-10">
+            <div className="flex items-center gap-4 mb-2">
               <span className="text-sm font-medium">Quantity</span>
 
               <div className="flex items-center bg-gray-100 rounded-full px-3">
                 <button
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  onClick={() => setQty((q) => Math.max(minQty, q - 1))}
                   className="px-3 text-xl cursor-pointer"
                 >
                   −
@@ -187,20 +209,31 @@ const ProductDetail = () => {
                 </button>
               </div>
             </div>
+
+            <p className="text-xs text-gray-500 mb-10">
+              Minimum order: {minQty} items
+            </p>
           </div>
 
           {/* CTA */}
           <div className="flex gap-4">
             <button
               onClick={handleAddToCart}
-              className="flex-1 bg-black cursor-pointer text-white py-4 rounded-xl hover:bg-gray-800 transition"
+              className="flex-1 bg-black text-white py-4 rounded-xl hover:bg-gray-800 transition cursor-pointer"
             >
               Add {qty} to Cart
             </button>
 
             <button
               onClick={handleBuyNow}
-              className="flex-1 border cursor-pointer border-black py-4 rounded-xl hover:bg-black hover:text-white transition"
+              disabled={qty < minQty}
+              className={`flex-1 py-4 rounded-xl transition cursor-pointer
+                ${
+                  qty < minQty
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
+                    : "border border-black hover:bg-black hover:text-white"
+                }
+              `}
             >
               Buy Now
             </button>
@@ -208,7 +241,7 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* ================= RELATED ================= */}
+      {/* RELATED */}
       {related.length > 0 && (
         <section className="mt-32">
           <h2 className="text-3xl font-bold mb-10 text-center">

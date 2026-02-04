@@ -25,12 +25,11 @@ export default function OrderSuccess() {
           Your order has been placed successfully.
         </p>
 
-        <p className="font-semibold mb-6">
-          Total Paid: ₹{order.total}
-        </p>
+        <p className="font-semibold mb-6">Total Paid: ₹{order.total}</p>
 
         <Link
           to="/profile"
+          state={{ tab: "orders" }}
           className="underline text-black"
         >
           View My Orders

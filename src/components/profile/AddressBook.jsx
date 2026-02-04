@@ -7,29 +7,40 @@ import { v4 as uuid } from "uuid";
 
 export default function AddressBook() {
   const { user } = useAuth();
+
   const [addresses, setAddresses] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  const [form, setForm] = useState({
+  const emptyForm = {
     label: "",
     name: "",
     phone: "",
-    address: "",
-  });
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    pincode: "",
+    country: "India",
+  };
 
-  /* 🔥 LOAD ADDRESSES */
+  const [form, setForm] = useState(emptyForm);
+
+  /* ---------------- LOAD ADDRESSES ---------------- */
   useEffect(() => {
+    if (!user) return;
+
     const load = async () => {
       const snap = await getDoc(doc(db, "users", user.uid));
       if (snap.exists()) {
         setAddresses(snap.data().addresses || []);
       }
     };
+
     load();
   }, [user]);
 
-  /* 💾 SAVE TO FIRESTORE */
+  /* ---------------- SAVE TO FIRESTORE ---------------- */
   const saveToDb = async (updated) => {
     await updateDoc(doc(db, "users", user.uid), {
       addresses: updated,
@@ -37,11 +48,23 @@ export default function AddressBook() {
     setAddresses(updated);
   };
 
-  /* ➕ ADD / ✏️ UPDATE */
+  /* ---------------- ADD / UPDATE ---------------- */
   const saveAddress = async () => {
-    if (!form.label || !form.name || !form.phone || !form.address) {
-      toast.error("All fields required");
-      return;
+    const required = [
+      "label",
+      "name",
+      "phone",
+      "line1",
+      "city",
+      "state",
+      "pincode",
+    ];
+
+    for (const field of required) {
+      if (!form[field]) {
+        toast.error("Please fill all required fields");
+        return;
+      }
     }
 
     let updated;
@@ -57,7 +80,7 @@ export default function AddressBook() {
         {
           id: uuid(),
           ...form,
-          isDefault: addresses.length === 0, // first address default
+          isDefault: addresses.length === 0,
         },
       ];
       toast.success("Address added");
@@ -66,17 +89,17 @@ export default function AddressBook() {
     await saveToDb(updated);
     setShowForm(false);
     setEditingId(null);
-    setForm({ label: "", name: "", phone: "", address: "" });
+    setForm(emptyForm);
   };
 
-  /* 🗑️ DELETE */
+  /* ---------------- DELETE ---------------- */
   const deleteAddress = async (id) => {
     const updated = addresses.filter((a) => a.id !== id);
     await saveToDb(updated);
     toast.success("Address deleted");
   };
 
-  /* ⭐ SET DEFAULT */
+  /* ---------------- SET DEFAULT ---------------- */
   const setDefault = async (id) => {
     const updated = addresses.map((a) => ({
       ...a,
@@ -86,7 +109,7 @@ export default function AddressBook() {
     toast.success("Default address updated");
   };
 
-  /* ✏️ EDIT */
+  /* ---------------- EDIT ---------------- */
   const editAddress = (addr) => {
     setForm(addr);
     setEditingId(addr.id);
@@ -101,9 +124,9 @@ export default function AddressBook() {
           onClick={() => {
             setShowForm(true);
             setEditingId(null);
-            setForm({ label: "", name: "", phone: "", address: "" });
+            setForm(emptyForm);
           }}
-          className="border border-black px-4 py-2 rounded-full hover:bg-black hover:text-white transition cursor-pointer"
+          className="border border-black px-4 py-2 rounded-full hover:bg-black hover:text-white transition"
         >
           Add New
         </button>
@@ -112,7 +135,7 @@ export default function AddressBook() {
       {/* ADDRESS LIST */}
       <div className="space-y-4">
         {addresses.map((a) => (
-          <div key={a.id} className="border rounded-xl p-4 flex flex-col gap-2">
+          <div key={a.id} className="border rounded-xl p-4 space-y-2">
             <div className="flex justify-between items-center">
               <p className="font-medium">{a.label}</p>
               {a.isDefault && (
@@ -126,20 +149,23 @@ export default function AddressBook() {
               {a.name} • {a.phone}
             </p>
 
-            <p className="text-sm text-gray-500">{a.address}</p>
+            <p className="text-sm text-gray-500">
+              {a.line1}
+              {a.line2 && `, ${a.line2}`}, {a.city}, {a.state} - {a.pincode}
+            </p>
 
-            <div className="flex gap-4 mt-3 text-sm">
-              <button onClick={() => editAddress(a)} className="underline cursor-pointer">
+            <div className="flex gap-4 text-sm mt-2">
+              <button onClick={() => editAddress(a)} className="underline">
                 Edit
               </button>
               <button
                 onClick={() => deleteAddress(a.id)}
-                className="underline text-red-600 cursor-pointer"
+                className="underline text-red-600"
               >
                 Delete
               </button>
               {!a.isDefault && (
-                <button onClick={() => setDefault(a.id)} className="underline cursor-pointer">
+                <button onClick={() => setDefault(a.id)} className="underline">
                   Set Preferred
                 </button>
               )}
@@ -152,7 +178,7 @@ export default function AddressBook() {
         )}
       </div>
 
-      {/* ADD / EDIT FORM */}
+      {/* FORM */}
       {showForm && (
         <div className="mt-8 border-t pt-6">
           <h3 className="font-semibold mb-4">
@@ -160,46 +186,36 @@ export default function AddressBook() {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              placeholder="Label (Home / Office)"
-              value={form.label}
-              onChange={(e) => setForm({ ...form, label: e.target.value })}
-              className="border p-3 rounded-xl"
-            />
-
-            <input
-              placeholder="Full Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="border p-3 rounded-xl"
-            />
-
-            <input
-              placeholder="Phone Number"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="border p-3 rounded-xl"
-            />
-
-            <textarea
-              placeholder="Full Address"
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              className="border p-3 rounded-xl md:col-span-2"
-              rows="3"
-            />
+            {[
+              ["label", "Label (Home / Office)"],
+              ["name", "Full Name"],
+              ["phone", "Phone Number"],
+              ["line1", "Address Line 1"],
+              ["line2", "Address Line 2 (optional)"],
+              ["city", "City"],
+              ["state", "State"],
+              ["pincode", "Pincode"],
+            ].map(([key, placeholder]) => (
+              <input
+                key={key}
+                placeholder={placeholder}
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                className="border p-3 rounded-xl"
+              />
+            ))}
           </div>
 
-          <div className="flex gap-4 mt-4">
+          <div className="flex gap-4 mt-6">
             <button
               onClick={saveAddress}
-              className="bg-black text-white px-6 py-3 rounded-xl cursor-pointer"
+              className="bg-black text-white px-6 py-3 rounded-xl"
             >
               Save
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="border px-6 py-3 rounded-xl cursor-pointer"
+              className="border px-6 py-3 rounded-xl"
             >
               Cancel
             </button>

@@ -9,85 +9,85 @@ export const useCart = () => useContext(CartContext);
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
 
-  /* ---------------- CART ITEMS ---------------- */
   const [cart, setCart] = useState([]);
-
-  /* ---------------- CART DRAWER ---------------- */
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartLoaded, setCartLoaded] = useState(false);
+  const [isAuthTransitioning, setIsAuthTransitioning] = useState(false);
 
-  /* ---------------- LOAD CART ---------------- */
-  useEffect(() => {
-    const loadCart = async () => {
-      if (user) {
-        // 🔥 USER CART FROM FIRESTORE
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists()) {
-          setCart(snap.data().cart || []);
-        } else {
-          setCart([]);
-        }
+  /* ---------------- MERGE HELPER ---------------- */
+  const mergeCarts = (a = [], b = []) => {
+    const map = new Map();
+
+    [...a, ...b].forEach((item) => {
+      if (map.has(item.id)) {
+        map.get(item.id).qty += item.qty;
       } else {
-        // 🧑‍ Guest cart from localStorage
-        const stored = localStorage.getItem("cart");
-        setCart(stored ? JSON.parse(stored) : []);
+        map.set(item.id, { ...item });
       }
-    };
+    });
 
-    loadCart();
-  }, [user]);
+    return Array.from(map.values());
+  };
 
-  /* ---------------- SAVE CART ---------------- */
+  /* ---------------- INITIAL LOAD (ONCE) ---------------- */
   useEffect(() => {
-    if (user) {
-      updateDoc(doc(db, "users", user.uid), {
-        cart,
-      }).catch(() => {});
-    } else {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
-  }, [cart, user]);
+    const stored = localStorage.getItem("cart");
+    setCart(stored ? JSON.parse(stored) : []);
+    setCartLoaded(true);
+  }, []);
 
-  /* ---------------- MERGE CART AFTER LOGIN ---------------- */
+  /* ---------------- HANDLE LOGIN ---------------- */
   useEffect(() => {
-    if (!user) return;
+    if (!user || !cartLoaded) return;
 
-    const mergeGuestCart = async () => {
+    const syncOnLogin = async () => {
+      setIsAuthTransitioning(true);
+
       const guestCart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-      if (guestCart.length === 0) return;
 
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
-
       const userCart = snap.exists() ? snap.data().cart || [] : [];
 
-      const merged = [...userCart];
-
-      guestCart.forEach((item) => {
-        const existing = merged.find((i) => i.id === item.id);
-        if (existing) {
-          existing.qty += item.qty;
-        } else {
-          merged.push(item);
-        }
-      });
+      const merged = mergeCarts(userCart, guestCart);
 
       await updateDoc(ref, { cart: merged });
       localStorage.removeItem("cart");
+
       setCart(merged);
+      setIsAuthTransitioning(false);
     };
 
-    mergeGuestCart();
-  }, [user]);
+    syncOnLogin();
+  }, [user, cartLoaded]);
+
+  /* ---------------- HANDLE LOGOUT ---------------- */
+  useEffect(() => {
+    if (user !== null) return;
+    if (!cartLoaded) return;
+
+    // 🔐 preserve cart when logging out
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [user, cartLoaded]); // intentionally NOT watching cart
+
+  /* ---------------- SAVE CART ---------------- */
+  useEffect(() => {
+    if (!cartLoaded || isAuthTransitioning) return;
+
+    if (user) {
+      updateDoc(doc(db, "users", user.uid), { cart }).catch(() => {});
+    } else {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+  }, [cart, user, cartLoaded, isAuthTransitioning]);
 
   /* ---------------- CART ACTIONS ---------------- */
   const addToCart = (product, qty, options = { openDrawer: true }) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-
+      const existing = prev.find((i) => i.id === product.id);
       if (existing) {
-        return prev.map((item) =>
-          item.id === product.id ? { ...item, qty: item.qty + qty } : item,
+        return prev.map((i) =>
+          i.id === product.id ? { ...i, qty: i.qty + qty } : i,
         );
       }
 
@@ -104,28 +104,21 @@ export const CartProvider = ({ children }) => {
       ];
     });
 
-    // 🔑 CONTROL DRAWER OPEN
-    if (options.openDrawer) {
-      setCartOpen(true);
-    }
+    if (options.openDrawer) setCartOpen(true);
   };
 
-  const removeFromCart = (id) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
+  const removeFromCart = (id) =>
+    setCart((prev) => prev.filter((i) => i.id !== id));
 
-  const updateQty = (id, qty) => {
-    setCart((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, qty } : item)),
-    );
-  };
+  const updateQty = (id, qty) =>
+    setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty } : i)));
 
   const clearCart = () => {
     setCart([]);
     setCartOpen(false);
+    localStorage.removeItem("cart");
   };
 
-  /* ---------------- PROVIDER ---------------- */
   return (
     <CartContext.Provider
       value={{

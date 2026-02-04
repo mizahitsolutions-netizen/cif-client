@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 
 export default function PlaceOrder({ selectedAddress }) {
   const { user } = useAuth();
-  const { cart, clearCart } = useCart();
+  const { cart } = useCart();
   const navigate = useNavigate();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
@@ -34,15 +34,17 @@ export default function PlaceOrder({ selectedAddress }) {
         items: cart,
         total,
         address: selectedAddress,
-        status: "placed",
-        payment: "pending",
+
+        status: "created", // 🔥 important
+        paymentStatus: "pending", // 🔥 important
         createdAt: serverTimestamp(),
       });
 
-      clearCart(); // ✅ 2️⃣ CLEAR CART
+      // ❌ DO NOT clear cart here
 
-      navigate(`/payment/${orderRef.id}`); // 👉 Razorpay next
+      navigate(`/payment/${orderRef.id}`);
     } catch (err) {
+      console.error(err);
       toast.error("Failed to place order");
     }
   };
