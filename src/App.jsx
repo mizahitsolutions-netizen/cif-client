@@ -16,6 +16,10 @@ import PaymentPage from "./pages/PaymentPage";
 import OrderSuccess from "./pages/OrderSuccess";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import About from "./pages/About";
+import RetailEnquiry from "./pages/RetailEnquiry";
+import { Contact } from "lucide-react";
+import Home from "./pages/Home";
 
 const HomePage = () => {
   useEffect(() => {
@@ -24,10 +28,11 @@ const HomePage = () => {
 
   return (
     <>
-      <HeroSection />
+      {/* <HeroSection />
       <MessageSection />
       <FlavorSection />
-      <BenefitSection />
+      <BenefitSection /> */}
+      <Home />
     </>
   );
 };
@@ -46,6 +51,9 @@ const App = () => {
         <Route path="/order-success/:orderId" element={<OrderSuccess />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/retail-enquiry" element={<RetailEnquiry />} />
+        <Route path="/contact" element={<Contact />} />
       </Route>
     </Routes>
   );

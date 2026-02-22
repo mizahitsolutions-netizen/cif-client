@@ -130,7 +130,7 @@ const FooterSection = () => {
               <p className="mt-3">
                 📞{" "}
                 <a href="tel:+919876543210" className="hover:underline">
-                  +91 78450 35095
+                  +91 86086 04700
                 </a>
               </p>
 
@@ -151,12 +151,12 @@ const FooterSection = () => {
               </p>
             </div>
 
-            <div>
+            {/* <div>
               <p className="mb-3 font-bold">Cookie Flavors</p>
               <p>Chocolate Crunch</p>
               <p>Berry Delight</p>
               <p>Classic Milk</p>
-            </div>
+            </div> */}
           </div>
 
           {/* Newsletter */}
