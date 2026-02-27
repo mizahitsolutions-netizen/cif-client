@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const RetailEnquiry = () => {
-
   const [form, setForm] = useState({
     name: "",
     business: "",
@@ -9,6 +8,10 @@ const RetailEnquiry = () => {
     phone: "",
     message: "",
   });
+
+  useEffect(() => {
+    document.title = "Retail Enquiry | Crumbella Innovative Foods";
+  }, []);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -31,10 +34,7 @@ const RetailEnquiry = () => {
 
   return (
     <div className="pt-24 max-w-4xl mx-auto px-6 py-16">
-
-      <h1 className="text-4xl font-bold mb-4 text-center">
-        Retail Enquiry
-      </h1>
+      <h1 className="text-4xl font-bold mb-4 text-center">Retail Enquiry</h1>
 
       <p className="text-gray-600 text-center mb-10">
         Interested in selling Crumbella products? Contact us below.
@@ -44,7 +44,6 @@ const RetailEnquiry = () => {
         onSubmit={handleSubmit}
         className="space-y-6 bg-white shadow-md p-8 rounded-xl"
       >
-
         <input
           name="name"
           placeholder="Your Name"
@@ -91,14 +90,10 @@ const RetailEnquiry = () => {
           className="w-full border p-3 rounded h-32"
         />
 
-        <button
-          className="w-full bg-black text-white py-3 rounded hover:bg-gray-800"
-        >
+        <button className="w-full bg-black text-white py-3 rounded hover:bg-gray-800">
           Submit Enquiry
         </button>
-
       </form>
-
     </div>
   );
 };
