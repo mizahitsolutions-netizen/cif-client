@@ -9,10 +9,28 @@ gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 const MainLayout = () => {
   useGSAP(() => {
-    ScrollSmoother.create({
-      smooth: 3,
-      effects: true,
+    // Prevent mobile resize scroll glitch
+    ScrollTrigger.config({
+      ignoreMobileResize: true,
     });
+
+    ScrollTrigger.defaults({
+      anticipatePin: 1,
+    });
+
+    // ✅ Only enable smooth scroll on desktop
+    if (window.innerWidth > 768) {
+      const smoother = ScrollSmoother.create({
+        wrapper: "#smooth-wrapper",
+        content: "#smooth-content",
+        smooth: 1.2,
+        effects: true,
+      });
+
+      return () => {
+        smoother.kill(); // cleanup on unmount
+      };
+    }
   }, []);
 
   return (
