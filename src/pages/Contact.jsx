@@ -54,7 +54,7 @@ const Contact = () => {
             required
             className="w-full border p-3 rounded"
           />
-fffff
+
           <textarea
             name="message"
             placeholder="Message"

@@ -85,20 +85,6 @@ export default function HeroBanner() {
       {/* Arrows */}
       {banners.length > 1 && (
         <>
-          {/* <button
-            onClick={prevSlide}
-            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 bg-white/30 p-2 md:p-3 rounded-full backdrop-blur-sm hover:bg-white/50 transition"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <button
-            onClick={nextSlide}
-            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 bg-white/30 p-2 md:p-3 rounded-full backdrop-blur-sm hover:bg-white/50 transition"
-          >
-            <ChevronRight size={20} />
-          </button> */}
-
           {/* Indicators */}
           <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
             {banners.map((_, i) => (

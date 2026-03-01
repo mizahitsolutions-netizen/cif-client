@@ -5,8 +5,7 @@ import OurProducts from "../components/home/OurProducts";
 
 const Home = () => {
   return (
-    <div className="pt-18">
-
+    <div className="pt-0 md:pt-18">
       <Hero />
 
       <BestSellers />
@@ -14,7 +13,6 @@ const Home = () => {
       <WhyChoose />
 
       <OurProducts />
-
     </div>
   );
 };
