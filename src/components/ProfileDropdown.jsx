@@ -59,7 +59,10 @@ export default function ProfileDropdown({ onClose }) {
     toast.success("Logged out");
 
     // 👉 Redirect ONLY if user was in profile section
-    if (location.pathname.startsWith("/profile")) {
+    if (
+      location.pathname.startsWith("/profile") ||
+      location.pathname.startsWith("/checkout")
+    ) {
       navigate("/");
     }
   };

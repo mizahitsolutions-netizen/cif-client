@@ -189,6 +189,14 @@ const NavBar = () => {
               Contact Us
             </NavLink>
 
+            <NavLink
+              to="/profile"
+              onClick={() => setMobileOpen(false)}
+              className={navLinkClass}
+            >
+              Profile
+            </NavLink>
+
             {!user && (
               <button
                 onClick={() => {

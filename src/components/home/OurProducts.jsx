@@ -6,11 +6,11 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { Link } from "react-router-dom";
 
 const categoryOrder = ["small", "medium", "family"];
 
@@ -18,6 +18,31 @@ const categoryTitles = {
   small: "Small Packs",
   medium: "Medium Packs",
   family: "Family Packs",
+};
+
+// 🔥 Stock Logic
+const getStockStatus = (quantity) => {
+  if (quantity <= 10) {
+    return {
+      label: "Out of Stock",
+      color: "bg-red-500",
+      disabled: true,
+    };
+  }
+
+  if (quantity <= 15) {
+    return {
+      label: "Low Stock",
+      color: "bg-yellow-500",
+      disabled: false,
+    };
+  }
+
+  return {
+    label: "In Stock",
+    color: "bg-green-500",
+    disabled: false,
+  };
 };
 
 const OurProducts = () => {
@@ -31,18 +56,14 @@ const OurProducts = () => {
     const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const allProducts = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
       const grouped = {
         small: [],
         medium: [],
         family: [],
       };
 
-      allProducts.forEach((product) => {
+      snapshot.forEach((doc) => {
+        const product = { id: doc.id, ...doc.data() };
         const type = product.packageType?.toLowerCase();
 
         if (grouped[type]) {
@@ -53,7 +74,7 @@ const OurProducts = () => {
       setGroupedProducts(grouped);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -69,113 +90,103 @@ const OurProducts = () => {
 
       {categoryOrder.map((category, index) => {
         const products = groupedProducts[category];
-
-        if (!products.length) return null;
+        if (!products || products.length === 0) return null;
 
         return (
           <motion.div
             key={category}
             initial={{ opacity: 0, y: 60 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.6,
-              delay: index * 0.2,
-            }}
+            transition={{ duration: 0.6, delay: index * 0.2 }}
             className="mb-20"
           >
-            {/* CATEGORY TITLE */}
-
-            <h3 className="text-2xl text-center font-semibold mb-6 capitalize">
+            <h3 className="text-2xl text-center font-semibold mb-10">
               {categoryTitles[category]}
             </h3>
 
-            {/* SLIDER */}
-
             <Swiper
               modules={[Navigation, Pagination, Autoplay]}
-              //   navigation
-              //   pagination={{ clickable: true }}
-              autoplay={{
-                delay: 2500,
-                disableOnInteraction: false,
-              }}
-              loop
-              spaceBetween={20}
+              // navigation
+              // pagination={{ clickable: true }}
+              autoplay={
+                products.length > 1
+                  ? { delay: 2500, disableOnInteraction: false }
+                  : false
+              }
+              loop={products.length > 1}
+              spaceBetween={24}
               breakpoints={{
                 320: { slidesPerView: 1 },
                 640: { slidesPerView: 2 },
                 1024: { slidesPerView: 3 },
               }}
             >
-              {products.map((product) => (
-                <SwiperSlide key={product.id}>
-                  <div
-                    className="
-      relative
-      bg-white
-      rounded-2xl
-      shadow-sm
-      hover:shadow-md
-      transition-shadow
-      p-6
-      text-center
-    "
-                  >
-                    {/* PRICE TAG */}
-                    <div
-                      className="
-        absolute
-        top-4
-        right-4
-        bg-green-600
-        text-white
-        text-sm
-        font-semibold
-        px-3
-        py-1
-        rounded-full
-        shadow
-      "
+              {products.map((product) => {
+                const quantity = product.quantity || 0;
+                const stock = getStockStatus(quantity);
+
+                return (
+                  <SwiperSlide key={product.id}>
+                    <motion.div
+                      whileHover={{ y: -6 }}
+                      transition={{ duration: 0.3 }}
+                      className="relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all p-6 text-center h-full"
                     >
-                      ₹{product.price}
-                    </div>
+                      {/* PRICE */}
+                      <div className="absolute top-4 right-4 bg-green-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
+                        ₹{product.price}
+                      </div>
 
-                    {/* PRODUCT IMAGE */}
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="
-        w-56
-        h-56
-        object-contain
-        mx-auto
-      "
-                    />
+                      {/* STOCK BADGE */}
+                      <div
+                        className={`absolute top-4 left-4 text-white text-xs font-semibold px-3 py-1 rounded-full ${stock.color}`}
+                      >
+                        {stock.label}
+                      </div>
 
-                    {/* PRODUCT NAME */}
-                    <h4 className="mt-4 font-semibold text-lg mb-4">
-                      {product.name}
-                    </h4>
+                      {/* PRODUCT IMAGE */}
+                      <div className="h-56 flex items-center justify-center">
+                        <img
+                          src={product.imageUrl || "/fallback.png"}
+                          alt={product.name}
+                          loading="lazy"
+                          className="max-h-full object-contain"
+                        />
+                      </div>
 
-                    {/* BUTTON */}
-                    <Link
-                      to={`/products/${product.slug}`}
-                      className="
-        mt-4
-        bg-green-600
-        text-white
-        px-6
-        py-2
-        rounded-lg
-        hover:bg-green-700
-        transition
-      "
-                    >
-                      View Product
-                    </Link>
-                  </div>
-                </SwiperSlide>
-              ))}
+                      {/* PRODUCT NAME */}
+                      <h4 className="mt-6 font-semibold text-lg mb-2">
+                        {product.name}
+                      </h4>
+
+                      {/* 🔥 Only X Left Message */}
+                      {quantity > 10 && quantity < 20 && (
+                        <p className="text-sm text-red-500 font-medium mb-4">
+                          🔥 Only {quantity} left in stock!
+                        </p>
+                      )}
+
+                      {/* BUTTON */}
+                      <Link
+                        to={`/products/${product.slug}`}
+                        className={`inline-block px-6 py-2 rounded-lg transition text-white ${
+                          stock.disabled
+                            ? "bg-gray-400 cursor-not-allowed pointer-events-none"
+                            : "bg-green-600 hover:bg-green-700"
+                        }`}
+                      >
+                        {stock.disabled ? "Unavailable" : "View Product"}
+                      </Link>
+
+                      {quantity < 10 && (
+                        <p className="text-sm text-red-500 font-medium mb-4">
+                          🔥 Coming Soon!
+                        </p>
+                      )}
+                    </motion.div>
+                  </SwiperSlide>
+                );
+              })}
             </Swiper>
           </motion.div>
         );

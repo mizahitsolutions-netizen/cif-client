@@ -12,21 +12,11 @@ export default function PlaceOrder({ selectedAddress }) {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
+  const isDisabled =
+    !user || !selectedAddress || cart.length === 0 || total < 150;
+
   const handlePlaceOrder = async () => {
-    if (!user) {
-      toast("Please login to continue", { icon: "🔒" });
-      return;
-    }
-
-    if (!cart.length) {
-      toast.error("Your cart is empty");
-      return;
-    }
-
-    if (!selectedAddress) {
-      toast.error("Please select delivery address");
-      return;
-    }
+    if (isDisabled) return; // extra safety
 
     try {
       const orderRef = await addDoc(collection(db, "orders"), {
@@ -34,13 +24,10 @@ export default function PlaceOrder({ selectedAddress }) {
         items: cart,
         total,
         address: selectedAddress,
-
-        status: "created", // 🔥 important
-        paymentStatus: "pending", // 🔥 important
+        status: "created",
+        paymentStatus: "pending",
         createdAt: serverTimestamp(),
       });
-
-      // ❌ DO NOT clear cart here
 
       navigate(`/payment/${orderRef.id}`);
     } catch (err) {
@@ -50,11 +37,20 @@ export default function PlaceOrder({ selectedAddress }) {
   };
 
   return (
-    <button
-      onClick={handlePlaceOrder}
-      className="w-full bg-black text-white py-4 rounded-xl hover:bg-gray-800 cursor-pointer"
-    >
-      Place Order
-    </button>
+    <div>
+
+      <button
+        onClick={handlePlaceOrder}
+        disabled={isDisabled}
+        className={`w-full py-4 rounded-xl transition 
+          ${
+            isDisabled
+              ? "bg-gray-400 text-white cursor-not-allowed"
+              : "bg-black text-white hover:bg-gray-800"
+          }`}
+      >
+        Place Order
+      </button>
+    </div>
   );
 }

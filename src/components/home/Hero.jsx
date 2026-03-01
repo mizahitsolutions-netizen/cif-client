@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export default function HeroBanner() {
   const [banners, setBanners] = useState([]);
   const [current, setCurrent] = useState(0);
+  
   const intervalRef = useRef(null);
 
   /* Fetch banners */
@@ -64,23 +65,19 @@ export default function HeroBanner() {
   return (
     <section className="relative w-full overflow-hidden ">
       {/* Slider Wrapper */}
-      <div className="relative w-full">
+      <div className="relative w-full aspect-[16/9] md:aspect-auto md:h-[80vh]">
         <AnimatePresence mode="wait">
           <motion.img
             key={banners[current].id}
             src={banners[current].imageUrl}
             loading="eager"
-            // initial={{ opacity: 0 }}
-            // animate={{ opacity: 1 }}
-            // exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
             className="
-              w-full 
-              h-auto 
-              object-contain 
-              md:h-[80vh] 
-              md:object-cover
-            "
+        absolute inset-0
+        w-full 
+        h-full 
+        object-cover
+      "
           />
         </AnimatePresence>
       </div>

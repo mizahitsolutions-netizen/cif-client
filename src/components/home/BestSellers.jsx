@@ -1,13 +1,33 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { db } from "../../firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 
+import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
+import { useUI } from "../../context/UIContext";
+
 const BestSellers = () => {
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const { openLogin } = useUI();
+
+  const getMinimumQty = (packageType) => {
+    if (!packageType) return 1;
+
+    const type = packageType.toLowerCase();
+    if (type === "small") return 1;
+    if (type === "medium") return 2;
+    if (type === "family") return 3;
+
+    return 1;
+  };
 
   useEffect(() => {
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "products"), orderBy("price", "asc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const allProducts = snapshot.docs.map((doc) => ({
@@ -15,59 +35,102 @@ const BestSellers = () => {
         ...doc.data(),
       }));
 
-      // required packageTypes
-      const requiredTypes = ["small", "medium", "family"];
+      // 🔥 Group products by price
+      const priceGroups = {};
 
-      const selectedProducts = [];
+      allProducts.forEach((product) => {
+        const price = Number(product.price);
 
-      requiredTypes.forEach((type) => {
-        const product = allProducts.find(
-          (p) => p.packageType && p.packageType.toLowerCase() === type,
+        if (!priceGroups[price]) {
+          priceGroups[price] = [];
+        }
+
+        priceGroups[price].push(product);
+      });
+
+      const finalProducts = [];
+
+      Object.values(priceGroups).forEach((group) => {
+        // 🔥 Find first in-stock product
+        const availableProduct = group.find(
+          (p) => p.quantity > 0, // change this if your stock field name is different
         );
 
-        if (product) {
-          selectedProducts.push(product);
+        if (availableProduct) {
+          finalProducts.push(availableProduct);
         }
       });
 
-      setProducts(selectedProducts);
+      setProducts(finalProducts);
     });
 
     return unsubscribe;
   }, []);
 
+  const handleBuyNow = (product) => {
+    const minQty = getMinimumQty(product.packageType);
+    const qty = minQty;
+
+    if (!user) {
+      openLogin();
+      toast("Please login to continue", { icon: "🔒" });
+      return;
+    }
+
+    addToCart(product, qty, { openDrawer: false });
+    navigate("/checkout");
+    window.scrollTo(0, 0);
+  };
+
   return (
     <section className="max-w-7xl mx-auto px-6 py-16">
-      <h2 className="text-3xl font-bold text-center mb-10">Our Bestsellers</h2>
+      <h2 className="text-3xl font-bold text-center mb-10">Best Sellers</h2>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div
+        className="grid gap-8 justify-center"
+        style={{
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+        }}
+      >
+        {" "}
         {products.map((product) => (
           <div
             key={product.id}
-            className="bg-white rounded-xl shadow hover:shadow-lg transition p-6 text-center"
+            onClick={() => navigate(`/products/${product.slug}`)}
+            className="relative bg-white rounded-xl shadow hover:shadow-lg transition p-6 text-center cursor-pointer group"
           >
-            {/* PRICE TAG */}
-            <div
-              className="absolute top-4right-4 bg-green-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow"
-            >
+            <div className="absolute top-4 right-4 bg-green-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
               ₹{product.price}
             </div>
+
             <img
               src={product.imageUrl}
               alt={product.name}
-              className="w-48 h-48 object-contain mx-auto"
+              className="w-40 h-40 object-contain mx-auto group-hover:scale-105 transition"
             />
 
             <h3 className="mt-4 font-semibold text-lg">{product.name}</h3>
 
-            <Link
-              to={`/products/${product.slug}`}
-              className="inline-block mt-4 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 transition"
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleBuyNow(product);
+              }}
+              className="mt-4 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 transition"
             >
-              View Details
-            </Link>
+              Buy Now
+            </button>
           </div>
         ))}
+      </div>
+
+      <div className="text-center mt-12">
+        <Link
+          to="/products"
+          className="inline-block border border-black px-8 py-3 rounded-full hover:bg-black hover:text-white transition"
+        >
+          View All Products
+        </Link>
       </div>
     </section>
   );
