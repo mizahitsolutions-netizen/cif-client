@@ -288,4 +288,6 @@ body::-webkit-scrollbar {
   padding: 1.5rem 2rem;
   border-radius: 20px;
 }
-
+* {
+  touch-action: auto !important;
+}
