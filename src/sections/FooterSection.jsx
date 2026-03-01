@@ -32,7 +32,6 @@ const FooterSection = () => {
     try {
       setLoading(true);
 
-      // 🔍 Check duplicate email
       const q = query(
         collection(db, "newsletter_emails"),
         where("email", "==", email.toLowerCase()),
@@ -41,14 +40,10 @@ const FooterSection = () => {
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
-        toast("You’re already subscribed 🍪", {
-          icon: "ℹ️",
-        });
-        setLoading(false);
+        toast("You’re already subscribed 🍪", { icon: "ℹ️" });
         return;
       }
 
-      // ✅ Add email
       await addDoc(collection(db, "newsletter_emails"), {
         email: email.toLowerCase(),
         createdAt: serverTimestamp(),
@@ -57,129 +52,103 @@ const FooterSection = () => {
       toast.success("Subscribed successfully 🎉");
       setEmail("");
     } catch (error) {
-      console.error(error);
-      toast.error("Something went wrong. Try again.");
+      toast.error("Something went wrong.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="footer-section">
-      <div className="2xl:h-[110dvh] relative md:pt-[20vh] pt-[10vh]">
-        {/* Headline */}
-        <div className="overflow-hidden z-10">
-          <h1 className="general-title text-center text-milk py-5">
-            #BAKEDWITHLOVE
-          </h1>
+    <section className="bg-[#1C1C1F] text-[#E5E5E5] relative overflow-hidden">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-16 py-20">
+        {/* BIG TAGLINE */}
+        <h1 className="text-center text-5xl md:text-7xl font-light tracking-widest mb-16">
+          #BAKEDWITHLOVE
+        </h1>
+
+        {/* SOCIAL ICONS */}
+        <div className="flex justify-center gap-8 mb-24">
+          {[
+            {
+              icon: <Youtube size={22} />,
+              link: "https://youtube.com/@crumbellainnovativefoods?si=RV4Ba9i9JBRrTsEK",
+            },
+            {
+              icon: <Instagram size={22} />,
+              link: "https://www.instagram.com/crumbellainnovativefoods2025",
+            },
+            {
+              icon: <Facebook size={22} />,
+              link: "https://www.facebook.com/share/1H5qnFnxr8/",
+            },
+          ].map((item, i) => (
+            <a
+              key={i}
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-14 h-14 rounded-full border border-gray-600 flex items-center justify-center hover:border-white transition"
+            >
+              {item.icon}
+            </a>
+          ))}
         </div>
 
-        {/* Social Links */}
-        <div className="flex-center gap-8 relative z-10 md:mt-20 mt-10 text-milk">
-          <a
-            href="https://youtube.com/@crumbellainnovativefoods?si=RV4Ba9i9JBRrTsEK"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-btn"
-            aria-label="YouTube"
-          >
-            <Youtube size={28} />
-          </a>
+        {/* MAIN CONTENT */}
+        <div className="grid md:grid-cols-2 gap-16">
+          {/* LEFT - COMPANY INFO */}
+          <div>
+            <p className="font-semibold mb-4 text-lg">Company</p>
 
-          <a
-            href="https://www.instagram.com/crumbellainnovativefoods2025?igsh=MWEwMnU0bDc1a2lxZg=="
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-btn"
-            aria-label="Instagram"
-          >
-            <Instagram size={28} />
-          </a>
+            <p className="leading-8 text-gray-300">
+              Crumbella Innovative Foods <br />
+              4/1A, Kuttiappar Lane, <br />
+              Aranmanai, Vadagarai, <br />
+              Periyakulam, Tamil Nadu <br />
+              625601 <br />
+              India
+            </p>
 
-          <a
-            href="https://www.facebook.com/share/1H5qnFnxr8/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-btn"
-            aria-label="Facebook"
-          >
-            <Facebook size={28} />
-          </a>
-        </div>
+            <p className="mt-6">
+              <a
+                href="tel:+918608604700"
+                className="hover:text-white transition"
+              >
+                📞 +91 86086 04700
+              </a>
+            </p>
 
-        {/* Footer Content */}
-        <div className="mt-32 md:px-10 px-5 flex gap-10 md:flex-row flex-col justify-between text-milk font-paragraph md:text-lg font-medium">
-          {/* Links */}
-          <div className="flex items-start md:gap-16 gap-10">
-            <div>
-              <p className="mb-3 font-bold">Company</p>
-
-              <p className="leading-relaxed">
-                Crumbella Innovative Foods
-                <br />
-                4/1A,Kuttiappar Lane,
-                <br />
-                Aranmanai,Vadagarai,
-                <br />
-                Periyakulam, Tamil Nadu
-                <br />
-                625601 <br />
-                India
-              </p>
-
-              <p className="mt-3">
-                📞{" "}
-                <a href="tel:+919876543210" className="hover:underline">
-                  +91 86086 04700
-                </a>
-              </p>
-
-              <p>
-                ✉️{" "}
-                <a
-                  href="mailto:contact@crumbellainnovativefoods.in"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.open(
-                      "https://mail.google.com/mail/?view=cm&fs=1&to=contact@crumbellainnovativefoods.in",
-                      "_blank",
-                    );
-                  }}
-                >
-                  contact@crumbellainnovativefoods.in{" "}
-                </a>
-              </p>
-            </div>
-
-            {/* <div>
-              <p className="mb-3 font-bold">Cookie Flavors</p>
-              <p>Chocolate Crunch</p>
-              <p>Berry Delight</p>
-              <p>Classic Milk</p>
-            </div> */}
+            <p className="mt-2">
+              <a
+                href="mailto:contact@crumbellainnovativefoods.in"
+                className="hover:text-white transition"
+              >
+                ✉️ contact@crumbellainnovativefoods.in
+              </a>
+            </p>
           </div>
 
-          {/* Newsletter */}
-          <div className="md:max-w-lg">
-            <p>
+          {/* RIGHT - NEWSLETTER */}
+          <div className="flex flex-col justify-center">
+            <p className="text-xl leading-8 text-gray-300 mb-12 max-w-xl">
               Join our cookie circle for fresh launches, special offers, and
               sweet updates straight from the oven.
             </p>
 
-            <div className="flex justify-between items-center border-b border-[#D9D9D9] py-5 md:mt-10">
+            <div className="flex items-center border-b border-gray-600 pb-4">
               <input
                 type="email"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full bg-transparent placeholder:text-[#999999] outline-none"
                 disabled={loading}
+                className="flex-1 bg-transparent outline-none text-lg placeholder:text-gray-500"
               />
 
               <button
                 onClick={handleSubscribe}
                 disabled={loading}
-                className="ml-4 font-bold hover:opacity-80 disabled:opacity-50 cursor-pointer"
+                className="ml-6 font-semibold hover:opacity-80 transition disabled:opacity-50"
               >
                 {loading ? "Subscribing..." : "Subscribe →"}
               </button>
@@ -187,17 +156,17 @@ const FooterSection = () => {
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="copyright-box">
+        {/* BOTTOM BAR */}
+        <div className="mt-24 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
           <p>
             © {new Date().getFullYear()} Crumbella Cookies. All Rights Reserved.
           </p>
 
-          <div className="flex items-center gap-7">
-            <Link to="/privacy-policy" onClick={() => window.scrollTo(0, 0)}>
+          <div className="flex gap-8 mt-4 md:mt-0">
+            <Link to="/privacy-policy" className="hover:text-white transition">
               Privacy Policy
             </Link>
-            <Link to="/terms" onClick={() => window.scrollTo(0, 0)}>
+            <Link to="/terms" className="hover:text-white transition">
               Terms of Service
             </Link>
           </div>
