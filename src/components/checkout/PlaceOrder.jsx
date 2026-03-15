@@ -5,7 +5,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-export default function PlaceOrder({ selectedAddress }) {
+export default function PlaceOrder({ selectedAddress, deliveryFee = 0 }) {
   const { user } = useAuth();
   const { cart } = useCart();
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ export default function PlaceOrder({ selectedAddress }) {
         userId: user.uid,
         items: cart,
         total,
+        deliveryFee: deliveryFee,
         address: selectedAddress,
         status: "created",
         paymentStatus: "pending",
@@ -46,7 +47,7 @@ export default function PlaceOrder({ selectedAddress }) {
           ${
             isDisabled
               ? "bg-gray-400 text-white cursor-not-allowed"
-              : "bg-black text-white hover:bg-gray-800"
+              : "bg-black text-white hover:bg-gray-800 cursor-pointer"
           }`}
       >
         Place Order

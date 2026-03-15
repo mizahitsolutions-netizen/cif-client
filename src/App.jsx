@@ -2,11 +2,6 @@ import { Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import MainLayout from "./layouts/MainLayout";
 
-import HeroSection from "./sections/HeroSection";
-import MessageSection from "./sections/MessageSection";
-import FlavorSection from "./sections/FlavorSection";
-import BenefitSection from "./sections/BenefitSection";
-
 import ProductsPage from "./pages/Productlisitng";
 import ProductDetail from "./pages/ProductDetailpage";
 import CartPage from "./pages/CartPage";
@@ -17,9 +12,10 @@ import OrderSuccess from "./pages/OrderSuccess";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import About from "./pages/About";
-import RetailEnquiry from "./pages/RetailEnquiry";
 import { Contact } from "lucide-react";
 import Home from "./pages/Home";
+import BulkOrder from "./pages/BulkEnquiry";
+import DistributorEnquiry from "./pages/DistributorPage";
 
 const HomePage = () => {
   useEffect(() => {
@@ -28,10 +24,6 @@ const HomePage = () => {
 
   return (
     <>
-      {/* <HeroSection />
-      <MessageSection />
-      <FlavorSection />
-      <BenefitSection /> */}
       <Home />
     </>
   );
@@ -52,7 +44,8 @@ const App = () => {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/about" element={<About />} />
-        <Route path="/retail-enquiry" element={<RetailEnquiry />} />
+        <Route path="/distributor-enquiry" element={<DistributorEnquiry />} />
+        <Route path="/bulk-enquiry" element={<BulkOrder />} />
         <Route path="/contact" element={<Contact />} />
       </Route>
     </Routes>

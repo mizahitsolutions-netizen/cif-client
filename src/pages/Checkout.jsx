@@ -3,8 +3,11 @@ import CartSummary from "../components/checkout/CartSummary";
 import AddressSelector from "../components/checkout/AddressSelector";
 import PlaceOrder from "../components/checkout/PlaceOrder";
 
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../firebase";
+
 export default function Checkout() {
-  /* ---------------- SET PAGE TITLE ---------------- */
+  /* ---------------- PAGE TITLE ---------------- */
   useEffect(() => {
     document.title = "Checkout | Crumbella Innovative Foods";
   }, []);
@@ -12,11 +15,34 @@ export default function Checkout() {
   /* ---------------- STATE ---------------- */
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [deliveryFee, setDeliveryFee] = useState(0);
 
   /* ---------------- DERIVED DATA ---------------- */
   const selectedAddress = addresses.find(
     (addr) => addr.id === selectedAddressId,
   );
+
+  /* ---------------- FETCH SHIPPING ---------------- */
+  useEffect(() => {
+    if (!selectedAddress?.pincode) return;
+
+    const getRates = httpsCallable(functions, "getShippingRates");
+
+    async function fetchShipping() {
+      try {
+        const res = await getRates({
+          pincode: selectedAddress.pincode,
+          orderValue: 500,
+        });
+
+        setDeliveryFee(res.data.shippingCost);
+      } catch (err) {
+        console.error("Shipping error:", err);
+      }
+    }
+
+    fetchShipping();
+  }, [selectedAddress]);
 
   return (
     <section className="max-w-7xl mx-auto px-4 py-24">
@@ -31,11 +57,14 @@ export default function Checkout() {
             onAddressesLoaded={setAddresses}
           />
 
-          <PlaceOrder selectedAddress={selectedAddress} />
+          <PlaceOrder
+            selectedAddress={selectedAddress}
+            deliveryFee={deliveryFee}
+          />
         </div>
 
         {/* RIGHT */}
-        <CartSummary />
+        <CartSummary deliveryFee={deliveryFee} />
       </div>
     </section>
   );

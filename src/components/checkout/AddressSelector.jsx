@@ -18,7 +18,9 @@ export default function AddressSelector({
 
   const emptyForm = {
     label: "",
-    name: "",
+    firstName: "",
+    lastName: "",
+    email: "",
     phone: "",
     line1: "",
     line2: "",
@@ -72,7 +74,9 @@ export default function AddressSelector({
   const saveAddress = async () => {
     const required = [
       "label",
-      "name",
+      "firstName",
+      "lastName",
+      "email",
       "phone",
       "line1",
       "city",
@@ -154,8 +158,10 @@ export default function AddressSelector({
                 </p>
 
                 <p className="text-sm text-gray-600">
-                  {a.name} • {a.phone}
+                  {a.firstName} {a.lastName} • {a.phone}
                 </p>
+
+                <p className="text-sm text-gray-500">{a.email}</p>
 
                 <p className="text-sm text-gray-500">
                   {a.line1}
@@ -187,7 +193,9 @@ export default function AddressSelector({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               ["label", "Label (Home / Office)"],
-              ["name", "Full Name"],
+              ["firstName", "First Name"],
+              ["lastName", "Last Name"],
+              ["email", "Email Address"],
               ["phone", "Phone Number"],
               ["line1", "Address Line 1"],
               ["line2", "Address Line 2 (optional)"],

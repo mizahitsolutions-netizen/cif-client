@@ -5,6 +5,7 @@ import AddressBook from "../components/profile/AddressBook";
 import OrdersList from "../components/profile/OrdersList";
 import ProfileCart from "../components/profile/ProfileCart";
 import { useLocation } from "react-router-dom";
+import ChangePassword from "../components/profile/ChangePassword";
 
 export default function Profile() {
   const location = useLocation();
@@ -27,6 +28,7 @@ export default function Profile() {
 
         <div className="md:col-span-3">
           {activeTab === "profile" && <ProfileInfo />}
+          {activeTab === "password" && <ChangePassword />}
           {activeTab === "addresses" && <AddressBook />}
           {activeTab === "orders" && <OrdersList />}
           {activeTab === "cart" && <ProfileCart />} {/* ⭐ */}

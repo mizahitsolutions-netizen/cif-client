@@ -19,7 +19,6 @@ const RetailEnquiry = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    console.log(form);
 
     alert("Retail enquiry submitted!");
 

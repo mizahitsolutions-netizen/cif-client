@@ -17,6 +17,10 @@ export default function OrderSuccess() {
 
   if (!order) return null;
 
+
+  const grandTotal = order.total + order.deliveryFee
+  
+
   return (
     <div className="min-h-screen flex items-center justify-center text-center">
       <div className="bg-white rounded-2xl shadow p-10 max-w-md">
@@ -25,7 +29,7 @@ export default function OrderSuccess() {
           Your order has been placed successfully.
         </p>
 
-        <p className="font-semibold mb-6">Total Paid: ₹{order.total}</p>
+        <p className="font-semibold mb-6">Total Paid: ₹{grandTotal}</p>
 
         <Link
           to="/profile"

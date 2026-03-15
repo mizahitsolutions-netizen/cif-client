@@ -4,21 +4,21 @@ import { auth } from "../firebase";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 
-const phoneRegex = /^[6-9]\d{9}$/;
-
 export default function LoginForm({ onSuccess }) {
-  const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   /* ---------- LIVE VALIDATION ---------- */
+
   useEffect(() => {
     let newErrors = {};
 
-    if (mobile && !phoneRegex.test(mobile)) {
-      newErrors.mobile = "Enter valid 10-digit mobile number";
+    if (email && !/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Enter a valid email address";
     }
 
     if (password && password.length < 6) {
@@ -26,12 +26,15 @@ export default function LoginForm({ onSuccess }) {
     }
 
     setErrors(newErrors);
-  }, [mobile, password]);
+  }, [email, password]);
 
   /* ---------- LOGIN ---------- */
+
   const handleLogin = async () => {
-    if (!mobile || !password) {
-      toast.error("All fields are required");
+    if (!email || !password) {
+      setErrors({
+        general: "Email and password are required",
+      });
       return;
     }
 
@@ -40,14 +43,15 @@ export default function LoginForm({ onSuccess }) {
     try {
       setLoading(true);
 
-      const fakeEmail = `91${mobile}@mobile.app`;
-
-      await signInWithEmailAndPassword(auth, fakeEmail, password);
+      await signInWithEmailAndPassword(auth, email, password);
 
       toast.success("Logged in successfully 🎉");
+
       onSuccess();
     } catch (err) {
-      setErrors({ general: "Invalid mobile number or password" });
+      setErrors({
+        general: "Invalid email or password",
+      });
     } finally {
       setLoading(false);
     }
@@ -55,24 +59,26 @@ export default function LoginForm({ onSuccess }) {
 
   return (
     <div className="space-y-4">
-      {/* MOBILE */}
+      {/* EMAIL */}
+
       <div>
         <input
-          type="tel"
-          maxLength={10}
+          type="email"
           className={`w-full border p-3 rounded-xl ${
-            errors.mobile ? "border-red-500" : ""
+            errors.email ? "border-red-500" : ""
           }`}
-          placeholder="Mobile number"
-          value={mobile}
-          onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+          placeholder="Email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
-        {errors.mobile && (
-          <p className="text-xs text-red-500 mt-1">{errors.mobile}</p>
+
+        {errors.email && (
+          <p className="text-xs text-red-500 mt-1">{errors.email}</p>
         )}
       </div>
 
-      {/* PASSWORD WITH EYE TOGGLE */}
+      {/* PASSWORD */}
+
       <div className="relative">
         <input
           type={showPassword ? "text" : "password"}
@@ -98,11 +104,13 @@ export default function LoginForm({ onSuccess }) {
       </div>
 
       {/* GENERAL ERROR */}
+
       {errors.general && (
         <p className="text-sm text-red-500 text-center">{errors.general}</p>
       )}
 
       {/* LOGIN BUTTON */}
+
       <button
         onClick={handleLogin}
         disabled={loading}

@@ -1,263 +1,192 @@
-import { useState, useEffect, useRef } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../firebase";
+import { useState } from "react";
 import {
-  doc,
-  setDoc,
-  getDocs,
-  query,
-  collection,
-  where,
-  serverTimestamp,
-} from "firebase/firestore";
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import { auth, db } from "../firebase";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Eye, EyeOff } from "lucide-react";
-
-const phoneRegex = /^[6-9]\d{9}$/;
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+import { FcGoogle } from "react-icons/fc";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function SignupForm({ onSuccess }) {
-  const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [otpValues, setOtpValues] = useState(["", "", "", ""]);
-  const [generatedOtp, setGeneratedOtp] = useState(null);
-  const [timer, setTimer] = useState(0);
-  const [otpVisibleTimer, setOtpVisibleTimer] = useState(0);
-  const [attempts, setAttempts] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const otpRefs = useRef([]);
+  const [errors, setErrors] = useState({});
 
-  /* ---------- LIVE VALIDATION ---------- */
-  useEffect(() => {
-    let newErrors = {};
+  const navigate = useNavigate();
+  const provider = new GoogleAuthProvider();
 
-    if (mobile && !phoneRegex.test(mobile)) {
-      newErrors.mobile = "Enter valid 10-digit mobile number";
+  /* -------------------------------- */
+  /* GOOGLE LOGIN */
+  /* -------------------------------- */
+
+  const handleGoogle = async () => {
+    try {
+      const res = await signInWithPopup(auth, provider);
+
+      const userRef = doc(db, "users", res.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: res.user.email,
+          name: res.user.displayName,
+          photo: res.user.photoURL,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      toast.success("Welcome 🎉");
+      navigate("/profile");
+    } catch (error) {
+      toast.error(error.message);
     }
+  };
 
-    if (password && !passwordRegex.test(password)) {
-      newErrors.password =
-        "Min 6 chars, 1 uppercase, 1 lowercase, 1 number required";
-    }
+  /* -------------------------------- */
+  /* VALIDATION */
+  /* -------------------------------- */
 
-    if (confirmPassword && confirmPassword !== password) {
+  const validate = () => {
+    const newErrors = {};
+
+    if (!email) newErrors.email = "Email is required";
+
+    if (!password) newErrors.password = "Password is required";
+    else if (password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password";
+    else if (password !== confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
-    }
 
     setErrors(newErrors);
-  }, [mobile, password, confirmPassword]);
 
-  /* ---------- OTP EXPIRY TIMER ---------- */
-  useEffect(() => {
-    let interval;
-    if (timer > 0) {
-      interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-    }
-    return () => clearInterval(interval);
-  }, [timer]);
-
-  /* ---------- OTP VISIBLE TIMER ---------- */
-  useEffect(() => {
-    let interval;
-    if (otpVisibleTimer > 0) {
-      interval = setInterval(
-        () => setOtpVisibleTimer((prev) => prev - 1),
-        1000,
-      );
-    }
-    return () => clearInterval(interval);
-  }, [otpVisibleTimer]);
-
-  const checkDuplicateMobile = async () => {
-    const q = query(
-      collection(db, "users"),
-      where("mobile", "==", `+91${mobile}`),
-    );
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSendOtp = async () => {
-    if (Object.keys(errors).length > 0) return;
+  /* -------------------------------- */
+  /* EMAIL SIGNUP */
+  /* -------------------------------- */
 
-    const duplicate = await checkDuplicateMobile();
-    if (duplicate) {
-      setErrors({ mobile: "Mobile number already registered" });
-      return;
-    }
-
-    const randomOtp = Math.floor(1000 + Math.random() * 9000);
-
-    setGeneratedOtp(randomOtp.toString());
-    setTimer(60);
-    setOtpVisibleTimer(10);
-    setAttempts(0);
-    setOtpValues(["", "", "", ""]);
-
-    toast.success("OTP generated successfully");
-  };
-
-  const handleOtpChange = (value, index) => {
-    if (!/^\d?$/.test(value)) return;
-
-    const updatedOtp = [...otpValues];
-    updatedOtp[index] = value;
-    setOtpValues(updatedOtp);
-
-    if (value && index < 3) {
-      otpRefs.current[index + 1].focus();
-    }
-  };
-
-  const handleOtpKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otpValues[index] && index > 0) {
-      otpRefs.current[index - 1].focus();
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    const enteredOtp = otpValues.join("");
-
-    if (timer === 0) {
-      setErrors({ otp: "OTP expired. Please resend." });
-      return;
-    }
-
-    if (attempts >= 3) {
-      setErrors({ otp: "Maximum attempts reached" });
-      return;
-    }
-
-    if (enteredOtp !== generatedOtp) {
-      setAttempts((prev) => prev + 1);
-      setErrors({ otp: "Invalid OTP" });
-      return;
-    }
+  const handleEmailSignup = async () => {
+    if (!validate()) return;
 
     try {
-      setLoading(true);
-
-      const fakeEmail = `91${mobile}@mobile.app`;
-
-      const res = await createUserWithEmailAndPassword(
-        auth,
-        fakeEmail,
-        password,
-      );
+      const res = await createUserWithEmailAndPassword(auth, email, password);
 
       await setDoc(doc(db, "users", res.user.uid), {
-        mobile: `+91${mobile}`,
+        email,
         createdAt: serverTimestamp(),
       });
 
-      toast.success("Account created successfully 🎉");
+      toast.success("Account created 🎉");
       onSuccess();
-    } catch {
-      toast.error("Signup failed");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setErrors({ email: err.message });
     }
   };
 
   return (
-    <div className="space-y-4">
-      {/* Mobile */}
-      <input
-        type="tel"
-        maxLength={10}
-        className="w-full border p-3 rounded-xl"
-        placeholder="Mobile number"
-        value={mobile}
-        onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-      />
+    <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg px-8 py-8 space-y-6">
+      {/* <h2 className="text-xl font-semibold text-center">Create Account</h2> */}
 
-      {/* Password */}
-      <div className="relative">
+      {/* EMAIL */}
+
+      <div className="space-y-1">
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full border p-3 rounded-xl"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+      </div>
+
+      {/* PASSWORD */}
+
+      <div className="space-y-1 relative">
         <input
           type={showPassword ? "text" : "password"}
-          className="w-full border p-3 rounded-xl pr-10"
           placeholder="Password"
+          className="w-full border p-3 rounded-xl pr-12"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
         <button
           type="button"
-          onClick={() => setShowPassword((p) => !p)}
-          className="absolute right-3 top-1/2 -translate-y-1/2"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-3 text-gray-500 cursor-pointer"
         >
-          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          {showPassword ? <FiEyeOff /> : <FiEye />}
         </button>
+
+        {errors.password && (
+          <p className="text-red-500 text-sm">{errors.password}</p>
+        )}
       </div>
 
-      {/* Confirm Password */}
-      <div className="relative">
+      {/* CONFIRM PASSWORD */}
+
+      <div className="space-y-1 relative">
         <input
           type={showConfirmPassword ? "text" : "password"}
-          className="w-full border p-3 rounded-xl pr-10"
           placeholder="Confirm password"
+          className="w-full border p-3 rounded-xl pr-12"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
+
         <button
           type="button"
-          onClick={() => setShowConfirmPassword((p) => !p)}
-          className="absolute right-3 top-1/2 -translate-y-1/2"
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          className="absolute right-3 top-3 text-gray-500 cursor-pointer"
         >
-          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
         </button>
+
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
+        )}
       </div>
 
-      {!generatedOtp && (
-        <button
-          onClick={handleSendOtp}
-          className="w-full py-3 bg-black text-white rounded-xl"
-        >
-          Send OTP
-        </button>
-      )}
+      {/* SIGNUP BUTTON */}
 
-      {generatedOtp && (
-        <>
-          {otpVisibleTimer > 0 && (
-            <div className="text-center text-green-600 font-semibold">
-              Your OTP: {generatedOtp} ({otpVisibleTimer}s)
-            </div>
-          )}
+      <button
+        onClick={handleEmailSignup}
+        className="w-full bg-black text-white py-3 rounded-xl cursor-pointer"
+      >
+        Create Account
+      </button>
 
-          {/* 4 OTP Boxes */}
-          <div className="flex justify-center gap-3">
-            {otpValues.map((digit, index) => (
-              <input
-                key={index}
-                ref={(el) => (otpRefs.current[index] = el)}
-                type="text"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleOtpChange(e.target.value, index)}
-                onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                className="w-12 h-12 text-center border rounded-lg text-lg font-semibold"
-              />
-            ))}
-          </div>
+      {/* DIVIDER */}
 
-          <button
-            onClick={handleVerifyOtp}
-            disabled={loading}
-            className="w-full py-3 bg-black text-white rounded-xl"
-          >
-            {loading ? "Verifying..." : "Verify OTP"}
-          </button>
+      <div className="flex items-center gap-3 text-gray-400 text-sm">
+        <div className="flex-1 h-[1px] bg-gray-200"></div>
+        OR
+        <div className="flex-1 h-[1px] bg-gray-200"></div>
+      </div>
 
-          <div className="text-center text-sm text-gray-500">
-            {timer > 0 ? `Resend OTP in ${timer}s` : "You can resend OTP now"}
-          </div>
-        </>
-      )}
+      {/* GOOGLE BUTTON */}
+
+      <button
+        onClick={handleGoogle}
+        className="w-full flex items-center justify-center gap-3 border py-3 rounded-xl hover:bg-gray-50 transition cursor-pointer"
+      >
+        <FcGoogle size={20} />
+        Continue with Google
+      </button>
     </div>
   );
 }

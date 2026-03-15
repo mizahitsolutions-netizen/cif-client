@@ -71,12 +71,16 @@ const NavBar = () => {
               Products
             </NavLink>
 
-            <NavLink to="/about" className={navLinkClass}>
-              About Us
+            <NavLink to="/distributor-enquiry" className={navLinkClass}>
+              Distributor Enquiry
             </NavLink>
 
-            <NavLink to="/retail-enquiry" className={navLinkClass}>
-              Retail Enquiry
+            <NavLink to="/bulk-enquiry" className={navLinkClass}>
+              Bulk Enquiry/Corporate Gifting
+            </NavLink>
+
+            <NavLink to="/about" className={navLinkClass}>
+              About Us
             </NavLink>
 
             <NavLink to="/contact" className={navLinkClass}>
@@ -111,7 +115,10 @@ const NavBar = () => {
             )}
 
             {/* CART */}
-            <button onClick={() => setCartOpen(true)} className="relative">
+            <button
+              onClick={() => setCartOpen(true)}
+              className="relative cursor-pointer"
+            >
               <ShoppingCart size={28} />
 
               {cartCount > 0 && (
@@ -166,19 +173,27 @@ const NavBar = () => {
             </NavLink>
 
             <NavLink
+              to="/distributor-enquiry"
+              onClick={() => setMobileOpen(false)}
+              className={navLinkClass}
+            >
+              Distributor Enquiry
+            </NavLink>
+
+            <NavLink
+              to="/bulk-enquiry"
+              onClick={() => setMobileOpen(false)}
+              className={navLinkClass}
+            >
+              Bulk Enquiry/Corporate Gifting
+            </NavLink>
+
+            <NavLink
               to="/about"
               onClick={() => setMobileOpen(false)}
               className={navLinkClass}
             >
               About Us
-            </NavLink>
-
-            <NavLink
-              to="/retail-enquiry"
-              onClick={() => setMobileOpen(false)}
-              className={navLinkClass}
-            >
-              Retail Enquiry
             </NavLink>
 
             <NavLink

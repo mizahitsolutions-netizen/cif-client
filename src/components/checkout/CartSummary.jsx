@@ -1,6 +1,6 @@
 import { useCart } from "../../context/CartContext";
 
-export default function CartSummary() {
+export default function CartSummary({ deliveryFee = 0 }) {
   const { cart, updateQty, removeFromCart } = useCart();
 
   const getMinimumQty = (packageType) => {
@@ -17,6 +17,8 @@ export default function CartSummary() {
   };
 
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  const grandTotal = total + deliveryFee;
 
   return (
     <div className="bg-white rounded-2xl shadow p-6 h-fit">
@@ -42,7 +44,7 @@ export default function CartSummary() {
                   className={`px-3 py-1 rounded border ${
                     item.qty <= minQty
                       ? "opacity-40 cursor-not-allowed"
-                      : "hover:bg-gray-100"
+                      : "hover:bg-gray-100 cursor-pointer"
                   }`}
                 >
                   −
@@ -52,21 +54,19 @@ export default function CartSummary() {
 
                 <button
                   onClick={() => updateQty(item.id, item.qty + 1)}
-                  className="px-3 py-1 rounded border hover:bg-gray-100"
+                  className="px-3 py-1 rounded border hover:bg-gray-100 cursor-pointer"
                 >
                   +
                 </button>
 
-                {/* Remove Button */}
                 <button
                   onClick={() => removeFromCart(item.id)}
-                  className="text-red-600 text-sm ml-4 hover:underline"
+                  className="text-red-600 text-sm ml-4 hover:underline cursor-pointer"
                 >
                   Remove
                 </button>
               </div>
 
-              {/* Minimum Info */}
               {item.qty === minQty && (
                 <p className="text-xs text-gray-500">
                   Minimum quantity for {item.packageType} pack is {minQty}
@@ -79,9 +79,22 @@ export default function CartSummary() {
 
       <hr className="my-6" />
 
-      <div className="flex justify-between font-semibold text-lg">
-        <span>Total</span>
+      {/* PRODUCT TOTAL */}
+      <div className="flex justify-between text-sm mb-2">
+        <span>Products Total</span>
         <span>₹{total}</span>
+      </div>
+
+      {/* DELIVERY FEE */}
+      <div className="flex justify-between text-sm mb-4">
+        <span>Delivery Fee</span>
+        <span>₹{deliveryFee}</span>
+      </div>
+
+      {/* GRAND TOTAL */}
+      <div className="flex justify-between font-semibold text-lg">
+        <span>Total Payable</span>
+        <span>₹{grandTotal}</span>
       </div>
 
       {total < 150 && cart.length > 0 && (

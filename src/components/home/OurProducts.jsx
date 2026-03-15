@@ -106,14 +106,9 @@ const OurProducts = () => {
 
             <Swiper
               modules={[Navigation, Pagination, Autoplay]}
-              // navigation
-              // pagination={{ clickable: true }}
-              autoplay={
-                products.length > 1
-                  ? { delay: 2500, disableOnInteraction: false }
-                  : false
-              }
-              loop={products.length > 1}
+              navigation
+              pagination={{ clickable: true }}
+              loop={false}
               spaceBetween={24}
               breakpoints={{
                 320: { slidesPerView: 1 },
