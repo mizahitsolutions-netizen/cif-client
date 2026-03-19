@@ -12,7 +12,7 @@ const About = () => {
       <section className="w-full bg-[#f8f4ef]">
         <div className="relative w-full">
           <img
-            src="/cookies-hero.png"
+            src="/images/cookies-hero.png"
             alt="Crumbella Hero"
             className="w-full h-auto"
           />
@@ -30,7 +30,11 @@ const About = () => {
 
       {/* OUR STORY */}
       <section className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center">
-        <img src="/baker.png" alt="Baker" className="rounded-xl shadow-lg" />
+        <img
+          src="/images/baker.png"
+          alt="Baker"
+          className="rounded-xl shadow-lg"
+        />
 
         <div>
           <h2 className="text-3xl font-bold text-center md:text-left mb-6">
@@ -108,7 +112,7 @@ const About = () => {
         </div>
 
         <img
-          src="/cookies-offer.png"
+          src="/images/cookies-offer.png"
           alt="Cookies"
           className="rounded-xl shadow-lg"
         />
