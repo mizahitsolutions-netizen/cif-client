@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollSmoother, ScrollTrigger } from "gsap/all";
+import WhatsAppButton from "../components/WhatsAppButton";
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
@@ -43,6 +44,7 @@ const MainLayout = () => {
           <FooterSection />
         </div>
       </div>
+      <WhatsAppButton />
     </main>
   );
 };

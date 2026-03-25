@@ -25,25 +25,6 @@ const ProductDetail = () => {
   const [error, setError] = useState(null);
   const [related, setRelated] = useState([]);
 
-  /* ---------------- MINIMUM QTY RULE ---------------- */
-  const getMinimumQty = useCallback((packageType) => {
-    switch (packageType?.toLowerCase()) {
-      case "small":
-        return 10;
-      case "medium":
-        return 6;
-      case "family":
-        return 5;
-      default:
-        return 1;
-    }
-  }, []);
-
-  const minQty = useMemo(
-    () => getMinimumQty(product?.packageType),
-    [product, getMinimumQty],
-  );
-
   /* ---------------- DYNAMIC TOTAL PRICE ---------------- */
   const totalPrice = useMemo(() => {
     if (!product) return 0;
@@ -72,7 +53,7 @@ const ProductDetail = () => {
 
           if (isMounted) {
             setProduct(data);
-            setQty(getMinimumQty(data.packageType));
+            setQty(1);
           }
         } else {
           setError("Product not found");
@@ -87,7 +68,7 @@ const ProductDetail = () => {
 
     fetchProduct();
     return () => (isMounted = false);
-  }, [slug, getMinimumQty]);
+  }, [slug]);
 
   /* ---------------- FETCH RELATED PRODUCT ---------------- */
   useEffect(() => {
@@ -189,11 +170,6 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product.quantity || product.quantity === 0) {
       toast.error("This product is out of stock");
-      return;
-    }
-
-    if (qty < minQty) {
-      toast.error(`Minimum order is ${minQty} items`);
       return;
     }
 
@@ -307,7 +283,7 @@ const ProductDetail = () => {
 
                   <div className="flex items-center bg-gray-100 rounded-full px-3">
                     <button
-                      onClick={() => setQty((q) => Math.max(minQty, q - 1))}
+                      onClick={() => setQty((q) => Math.max(1, q - 1))}
                       className="px-3 text-xl cursor-pointer"
                     >
                       −
@@ -325,10 +301,6 @@ const ProductDetail = () => {
                     </button>
                   </div>
                 </div>
-
-                <p className="text-xs text-gray-500 mb-10">
-                  Minimum order: {minQty} items
-                </p>
               </>
             )}
           </div>

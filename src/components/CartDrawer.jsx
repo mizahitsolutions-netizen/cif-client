@@ -16,21 +16,12 @@ const CartDrawer = ({ open, onClose }) => {
   const { openLogin } = useUI();
   const { cart, removeFromCart, updateQty } = useCart();
 
-  /* ---------------- MIN QTY RULE ---------------- */
-  const getMinimumQty = (packageType) => {
-    switch (packageType?.toLowerCase()) {
-      case "small":
-        return 10;
-      case "medium":
-        return 6;
-      case "family":
-        return 5;
-      default:
-        return 1;
-    }
-  };
-
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  const FREE_SHIPPING_LIMIT = 500;
+
+  const remaining = FREE_SHIPPING_LIMIT - total;
+  const isFreeShipping = total >= FREE_SHIPPING_LIMIT;
 
   /* ---------------- BODY SCROLL LOCK ---------------- */
   useEffect(() => {
@@ -115,8 +106,6 @@ const CartDrawer = ({ open, onClose }) => {
           )}
 
           {cart.map((item) => {
-            const minQty = getMinimumQty(item.packageType);
-
             return (
               <div key={item.id} className="flex gap-4">
                 <div className="bg-[#f8f4ef] w-20 h-20 rounded-lg flex items-center justify-center">
@@ -138,12 +127,7 @@ const CartDrawer = ({ open, onClose }) => {
                     <div className="flex items-center bg-gray-100 rounded-full px-2">
                       <button
                         onClick={() => {
-                          if (item.qty <= minQty) {
-                            toast.error(
-                              `Minimum ${minQty} required for ${item.packageType} pack`,
-                            );
-                            return;
-                          }
+                          if (item.qty <= 1) return;
                           updateQty(item.id, item.qty - 1);
                         }}
                         className="px-2 cursor-pointer"
@@ -168,11 +152,6 @@ const CartDrawer = ({ open, onClose }) => {
                       Remove
                     </button>
                   </div>
-
-                  {/* MIN INFO */}
-                  <p className="text-xs text-gray-400 mt-1">
-                    Minimum: {minQty}
-                  </p>
                 </div>
 
                 <div className="font-semibold">₹{item.price * item.qty}</div>
@@ -183,7 +162,21 @@ const CartDrawer = ({ open, onClose }) => {
 
         {/* FOOTER */}
         <div className="p-6 border-t">
-          <div className="flex justify-between font-semibold mb-4">
+          {/* FREE SHIPPING MESSAGE ONLY */}
+          {!isFreeShipping && (
+            <p className="text-sm text-center text-orange-600 mb-3">
+              Add ₹{remaining} more to get FREE delivery 🚚
+            </p>
+          )}
+
+          {isFreeShipping && (
+            <p className="text-sm text-center text-green-600 mb-3">
+              🎉 You unlocked FREE delivery!
+            </p>
+          )}
+
+          {/* TOTAL ONLY */}
+          <div className="flex justify-between font-semibold mb-4 text-lg">
             <span>Total</span>
             <span>₹{total}</span>
           </div>
@@ -194,6 +187,19 @@ const CartDrawer = ({ open, onClose }) => {
           >
             Proceed to Checkout
           </button>
+
+          {/* 🔥 CONTINUE SHOPPING BUTTON */}
+          {!isFreeShipping && (
+            <button
+              onClick={() => {
+                onClose();
+                navigate("/products");
+              }}
+              className="w-full mt-3 border border-black bg-black text-white py-3 rounded-xl hover:bg-white hover:text-black  transition cursor-pointer"
+            >
+              Continue Shopping
+            </button>
+          )}
         </div>
       </aside>
     </>

@@ -44,18 +44,28 @@ const NavBar = () => {
     ${
       isActive
         ? "after:w-full text-black"
+        : "after:w-0 hover:after:w-full text-white hover:text-black"
+    }`;
+
+  const mobnavLinkClass = ({ isActive }) =>
+    `relative font-medium transition duration-300 
+    after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:bg-black 
+    after:transition-all after:duration-300
+    ${
+      isActive
+        ? "after:w-full text-black"
         : "after:w-0 hover:after:w-full text-gray-700 hover:text-black"
     }`;
 
   return (
     <>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1A6425] shadow-sm">
         <div className="flex items-center justify-between px-6 py-3">
           {/* LOGO */}
           <Link to="/">
             <img
-              src="/images/logo.png"
+              src="/images/logo1.png"
               alt="Crumbella"
               className="h-12 object-contain"
             />
@@ -94,9 +104,9 @@ const NavBar = () => {
             {!user ? (
               <button
                 onClick={openLogin}
-                className="hidden md:flex items-center gap-2 border border-black px-4 py-2 rounded-full hover:bg-black hover:text-white transition"
+                className="hidden md:flex items-center gap-2 border border-white text-white px-4 py-2 rounded-full hover:bg-black hover:text-white transition cursor-pointer"
               >
-                <UserCircle size={20} />
+                <UserCircle size={20} className="text-white"/>
                 Login
               </button>
             ) : (
@@ -105,7 +115,7 @@ const NavBar = () => {
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="cursor-pointer"
                 >
-                  <UserCircle size={28} />
+                  <UserCircle size={28} className="text-white" />
                 </button>
 
                 {profileOpen && (
@@ -119,7 +129,7 @@ const NavBar = () => {
               onClick={() => setCartOpen(true)}
               className="relative cursor-pointer"
             >
-              <ShoppingCart size={28} />
+              <ShoppingCart size={28} className="text-white" />
 
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
@@ -130,7 +140,7 @@ const NavBar = () => {
 
             {/* MOBILE MENU BUTTON */}
             <button className="md:hidden" onClick={() => setMobileOpen(true)}>
-              <Menu size={28} />
+              <Menu size={28} className="text-white cursor-pointer" />
             </button>
           </div>
         </div>
@@ -150,7 +160,7 @@ const NavBar = () => {
           {/* CLOSE BUTTON */}
           <div className="flex justify-end p-4">
             <button onClick={() => setMobileOpen(false)}>
-              <X size={28} />
+              <X size={28} className="cursor-pointer"/>
             </button>
           </div>
 
@@ -159,7 +169,7 @@ const NavBar = () => {
             <NavLink
               to="/"
               onClick={() => setMobileOpen(false)}
-              className={navLinkClass}
+              className={mobnavLinkClass}
             >
               Home
             </NavLink>
@@ -167,7 +177,7 @@ const NavBar = () => {
             <NavLink
               to="/products"
               onClick={() => setMobileOpen(false)}
-              className={navLinkClass}
+              className={mobnavLinkClass}
             >
               Products
             </NavLink>
@@ -175,7 +185,7 @@ const NavBar = () => {
             <NavLink
               to="/distributor-enquiry"
               onClick={() => setMobileOpen(false)}
-              className={navLinkClass}
+              className={mobnavLinkClass}
             >
               Distributor Enquiry
             </NavLink>
@@ -183,7 +193,7 @@ const NavBar = () => {
             <NavLink
               to="/bulk-enquiry"
               onClick={() => setMobileOpen(false)}
-              className={navLinkClass}
+              className={mobnavLinkClass}
             >
               Bulk Enquiry/Corporate Gifting
             </NavLink>
@@ -191,7 +201,7 @@ const NavBar = () => {
             <NavLink
               to="/about"
               onClick={() => setMobileOpen(false)}
-              className={navLinkClass}
+              className={mobnavLinkClass}
             >
               About Us
             </NavLink>
@@ -199,7 +209,7 @@ const NavBar = () => {
             <NavLink
               to="/contact"
               onClick={() => setMobileOpen(false)}
-              className={navLinkClass}
+              className={mobnavLinkClass}
             >
               Contact Us
             </NavLink>
@@ -207,7 +217,7 @@ const NavBar = () => {
             <NavLink
               to="/profile"
               onClick={() => setMobileOpen(false)}
-              className={navLinkClass}
+              className={mobnavLinkClass}
             >
               Profile
             </NavLink>

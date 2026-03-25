@@ -64,7 +64,7 @@ const ProductListing = () => {
     );
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-16">
+    <section className="max-w-7xl mx-auto px-4 py-20">
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-400 mb-3">
         <Link to="/" className="hover:text-black">

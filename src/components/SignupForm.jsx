@@ -45,7 +45,8 @@ export default function SignupForm({ onSuccess }) {
       }
 
       toast.success("Welcome 🎉");
-      navigate("/profile");
+      navigate("/profile", { state: { tab: "password" } });
+      onSuccess();
     } catch (error) {
       toast.error(error.message);
     }

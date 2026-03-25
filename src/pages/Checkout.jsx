@@ -16,6 +16,7 @@ export default function Checkout() {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(0);
+  const [expeddate, setexpeddate] = useState(null);
 
   /* ---------------- DERIVED DATA ---------------- */
   const selectedAddress = addresses.find(
@@ -36,6 +37,7 @@ export default function Checkout() {
         });
 
         setDeliveryFee(res.data.shippingCost);
+        setexpeddate(res.data.estimatedDays);
       } catch (err) {
         console.error("Shipping error:", err);
       }
@@ -60,11 +62,12 @@ export default function Checkout() {
           <PlaceOrder
             selectedAddress={selectedAddress}
             deliveryFee={deliveryFee}
+            expeddate={expeddate}
           />
         </div>
 
         {/* RIGHT */}
-        <CartSummary deliveryFee={deliveryFee} />
+        <CartSummary deliveryFee={deliveryFee} expeddate={expeddate} />
       </div>
     </section>
   );

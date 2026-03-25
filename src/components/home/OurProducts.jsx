@@ -78,7 +78,7 @@ const OurProducts = () => {
   }, []);
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-20">
+    <section className="max-w-7xl mx-auto px-6 pt-16">
       <motion.h2
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}

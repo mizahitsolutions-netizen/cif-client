@@ -51,7 +51,16 @@ export default function PaymentPage() {
             orderValue: orderData.total,
           });
 
-          setShippingCost(res.data.shippingCost);
+          const FREE_DELIVERY_THRESHOLD = 500; // ✅ you can change this
+
+          let finalShipping = res.data.shippingCost;
+
+          // ✅ APPLY FREE DELIVERY
+          if (orderData.total >= FREE_DELIVERY_THRESHOLD) {
+            finalShipping = 0;
+          }
+
+          setShippingCost(finalShipping);
           setCourierName(res.data.courierName);
         }
       } catch (err) {
@@ -221,7 +230,13 @@ export default function PaymentPage() {
 
               <div className="flex justify-between">
                 <span>Delivery Fee</span>
-                <span>₹{shippingCost}</span>
+                <span
+                  className={
+                    shippingCost === 0 ? "text-green-600 font-semibold" : ""
+                  }
+                >
+                  {shippingCost === 0 ? "🎉 FREE 🎉" : `₹${shippingCost}`}
+                </span>{" "}
               </div>
             </div>
 
@@ -231,6 +246,7 @@ export default function PaymentPage() {
                 <span>₹{grandTotal}</span>
               </div>
             </div>
+            
 
             <button
               onClick={handlePay}

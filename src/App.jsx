@@ -12,10 +12,10 @@ import OrderSuccess from "./pages/OrderSuccess";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import About from "./pages/About";
-import { Contact } from "lucide-react";
 import Home from "./pages/Home";
 import BulkOrder from "./pages/BulkEnquiry";
 import DistributorEnquiry from "./pages/DistributorPage";
+import ContactUs from "./pages/Contact";
 
 const HomePage = () => {
   useEffect(() => {
@@ -46,7 +46,7 @@ const App = () => {
         <Route path="/about" element={<About />} />
         <Route path="/distributor-enquiry" element={<DistributorEnquiry />} />
         <Route path="/bulk-enquiry" element={<BulkOrder />} />
-        <Route path="/contact" element={<Contact />} />
+        <Route path="/contact" element={<ContactUs />} />
       </Route>
     </Routes>
   );

@@ -12,7 +12,7 @@ const About = () => {
       <section className="w-full bg-[#f8f4ef]">
         <div className="relative w-full">
           <img
-            src="/images/cookies-hero.png"
+            src="/images/cookies-hero1.png"
             alt="Crumbella Hero"
             className="w-full h-auto"
           />
@@ -42,15 +42,39 @@ const About = () => {
           </h2>
 
           <p className="text-gray-700 mb-4">
-            Crumbella Innovative Foods was founded with a simple passion – to
-            create delicious, high-quality food products that bring joy to every
-            bite. What started as a vision to deliver better bakery experiences
-            has grown into a brand trusted for taste, quality, and innovation.
+            Crumbella Innovative Foods was born from a simple yet powerful idea
+            — to create food that not only tastes delightful but also builds
+            lasting trust with every bite. What began as a passion-driven
+            initiative has grown into a brand dedicated to delivering excellence
+            in every product we craft.
+          </p>
+
+          <p className="text-gray-700 mb-4">
+            Rooted in tradition and inspired by modern innovation, we carefully
+            blend time-honored recipes with advanced food processing techniques.
+            This unique approach allows us to maintain authentic flavors while
+            ensuring consistency, safety, and superior quality across all our
+            offerings.
+          </p>
+
+          <p className="text-gray-700 mb-4">
+            At Crumbella, we believe that great food starts with great
+            ingredients. From selecting premium grains to maintaining strict
+            quality standards throughout production, every step is designed to
+            deliver products that families can enjoy with confidence.
+          </p>
+
+          <p className="text-gray-700 mb-4">
+            Over time, our commitment to innovation has helped us expand beyond
+            traditional bakery items into a diverse range of cookies,
+            millet-based products, and health-focused snacks that cater to
+            evolving consumer needs.
           </p>
 
           <p className="text-gray-700">
-            We combine traditional recipes with modern food processing standards
-            to ensure every product meets exceptional quality benchmarks.
+            Today, Crumbella stands as a symbol of trust, taste, and innovation
+            — proudly serving customers across India while continuously striving
+            to redefine the future of food.
           </p>
         </div>
       </section>

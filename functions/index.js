@@ -6,6 +6,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const admin = require("firebase-admin");
 const axios = require("axios");
+const nodemailer = require("nodemailer");
 
 const {
   onCall,
@@ -30,6 +31,20 @@ const RAZORPAY_KEY_SECRET = defineString("RAZORPAY_KEY_SECRET");
 
 const SHIPROCKET_EMAIL = defineString("SHIPROCKET_EMAIL");
 const SHIPROCKET_PASSWORD = defineString("SHIPROCKET_PASSWORD");
+
+/* =====================================================
+EMAIL TRANSPORTER
+===================================================== */
+
+const transporter = nodemailer.createTransport({
+  host: "mail.smtp2go.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "crumbellainnovativefoods.in",
+    pass: "doQ16vvzbLhHN9nR",
+  },
+});
 
 /* =====================================================
 DEFAULT PACKAGE SIZE
@@ -352,6 +367,278 @@ async function schedulePickup(shipmentId) {
 }
 
 /* =====================================================
+CUSTOMER EMAIL HELPER FUNCTION
+===================================================== */
+
+async function sendOrderEmail(order) {
+  try {
+    const itemsHTML = order.items
+      .map(
+        (item) => `
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.qty}</td>
+          <td>₹${item.price * item.qty}</td>
+        </tr>
+      `,
+      )
+      .join("");
+
+    const isFreeDelivery = order.total > 500;
+    const deliveryFee = isFreeDelivery ? 0 : order.deliveryFee;
+    const grandTotal = order.total + deliveryFee;
+
+    const html = `
+<div style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+  
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;margin-top:20px;">
+
+          <!-- 🔥 HEADER WITH LOGO -->
+          <tr>
+            <td style="background:#000;padding:25px;text-align:center;">
+              <img 
+                src="https://crumbellainnovativefoods.in/images/logo.png" 
+                alt="Crumbella Logo" 
+                width="120" 
+                style="margin-bottom:10px;"
+              />
+            </td>
+          </tr>
+
+          <!-- SUCCESS -->
+          <tr>
+            <td style="padding:30px;text-align:center;">
+              <h2 style="color:#28a745;margin-bottom:10px;">🎉 Order Confirmed!</h2>
+              <p style="color:#555;">
+                Hi ${order.address?.firstName} ${order.address?.lastName || ""}, your order has been placed successfully.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ITEMS -->
+          <tr>
+            <td style="padding:0 30px 10px;">
+              <table width="100%" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">
+                <thead>
+                  <tr style="background:#f8f8f8;">
+                    <th align="left">Item</th>
+                    <th align="center">Qty</th>
+                    <th align="right">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${order.items
+                    .map(
+                      (item) => `
+                    <tr style="border-bottom:1px solid #eee;">
+                      <td>${item.name}</td>
+                      <td align="center">${item.qty}</td>
+                      <td align="right">₹${item.price * item.qty}</td>
+                    </tr>
+                  `,
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 🔥 SPACING (THIS FIXES YOUR ISSUE) -->
+          <tr>
+            <td style="height:25px;"></td>
+          </tr>
+
+          <!-- ORDER DETAILS -->
+          <tr>
+            <td style="padding:0 30px 10px;">
+              <table width="100%" style="font-size:14px;color:#333;">
+                
+                <tr>
+                  <td><strong>Order ID:</strong></td>
+                  <td align="right">${order.id}</td>
+                </tr>
+
+                <tr>
+                  <td><strong>Product Total:</strong></td>
+                  <td align="right">₹${order.total}</td>
+                </tr>
+
+                ${
+                  order.total > 500
+                    ? `
+                <tr>
+                  <td><strong>Delivery:</strong></td>
+                  <td align="right" style="color:green;font-weight:bold;">FREE</td>
+                </tr>
+                `
+                    : `
+                <tr>
+                  <td><strong>Delivery Fee:</strong></td>
+                  <td align="right">₹${order.deliveryFee}</td>
+                </tr>
+                `
+                }
+
+                <tr>
+                  <td><strong>Grand Total:</strong></td>
+                  <td align="right">
+                    ₹${order.total > 500 ? order.total : order.grandTotal}
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- ADDRESS -->
+          <tr>
+            <td style="padding:30px;">
+              <h3 style="margin-bottom:10px;">🚚 Delivery Address</h3>
+              <p style="margin:0;color:#555;">
+                ${order.address?.firstName} ${order.address?.lastName || ""}<br/>
+                ${order.address?.line1}${order.address?.line2 ? " - " + order.address.line2 : ""}<br/>
+                ${order.address?.city} - ${order.address?.state}<br/>
+                ${order.address?.pincode}
+              </p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#f8f8f8;padding:20px;text-align:center;font-size:12px;color:#777;">
+              <p style="margin:0;">Thank you for shopping with Crumbella ❤️</p>
+              <p style="margin:5px 0 0;">© ${new Date().getFullYear()} Crumbella Innovative Foods</p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</div>
+`;
+
+    await transporter.sendMail({
+      from: '"Crumbella" <no-reply@crumbellainnovativefoods.in>',
+      to: order.address.email,
+      subject: `Order Confirmed - ${order.id}`,
+      html,
+    });
+
+    console.log("Email sent successfully");
+  } catch (err) {
+    console.error("Email Error:", err);
+  }
+}
+
+/* =====================================================
+ADMIN EMAIL HELPER FUNCTION
+===================================================== */
+
+async function sendAdminEmail(order) {
+  try {
+    const isFreeDelivery = order.total > 500;
+    const deliveryFee = isFreeDelivery ? 0 : order.deliveryFee;
+    const grandTotal = order.total + deliveryFee;
+
+    const itemsList = order.items
+      .map(
+        (item) => `
+        <tr>
+          <td>${item.name}</td>
+          <td align="center">${item.qty}</td>
+          <td align="right">₹${item.price * item.qty}</td>
+        </tr>
+      `,
+      )
+      .join("");
+
+    const html = `
+      <div style="font-family:Arial;padding:20px;">
+        
+        <h2>🛒 New Order Received!</h2>
+
+        <p><strong>Order ID:</strong> ${order.id}</p>
+        <p><strong>Customer:</strong> ${order.address?.firstName} ${order.address?.lastName || ""}</p>
+        <p><strong>Phone:</strong> ${order.address?.phone}</p>
+        <p><strong>Email:</strong> ${order.address?.email}</p>
+
+        <h3>📦 Items</h3>
+        <table border="1" cellpadding="8" cellspacing="0" width="100%">
+          <tr>
+            <th align="left">Item</th>
+            <th>Qty</th>
+            <th align="right">Price</th>
+          </tr>
+          ${itemsList}
+        </table>
+
+        <h3 style="margin-top:20px;">💰 Payment Details</h3>
+        <table width="100%" style="font-size:14px;">
+          
+          <tr>
+            <td><strong>Product Total:</strong></td>
+            <td align="right">₹${order.total}</td>
+          </tr>
+
+          ${
+            isFreeDelivery
+              ? `
+          <tr>
+            <td><strong>Delivery:</strong></td>
+            <td align="right" style="color:green;font-weight:bold;">FREE</td>
+          </tr>
+          `
+              : `
+          <tr>
+            <td><strong>Delivery Fee:</strong></td>
+            <td align="right">₹${deliveryFee}</td>
+          </tr>
+          `
+          }
+
+          <tr>
+            <td><strong>Grand Total:</strong></td>
+            <td align="right">₹${grandTotal}</td>
+          </tr>
+
+        </table>
+
+        <h3 style="margin-top:20px;">🚚 Address</h3>
+        <p>
+          ${order.address?.line1}<br/>
+          ${order.address?.city} - ${order.address?.state}<br/>
+          ${order.address?.pincode}
+        </p>
+
+        <br/>
+        <p style="color:red;font-weight:bold;">
+          ⚡ Action Required: Process this order immediately
+        </p>
+
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: '"Crumbella Orders" <no-reply@crumbellainnovativefoods.in>',
+      to: "admin@crumbellainnovativefoods.in", // 🔥 change this
+      subject: `🛒 New Order - ${order.id}`,
+      html,
+    });
+
+    console.log("Admin email sent");
+  } catch (err) {
+    console.error("Admin Email Error:", err);
+  }
+}
+
+/* =====================================================
 VERIFY RAZORPAY PAYMENT + SHIP ORDER
 ===================================================== */
 
@@ -475,6 +762,9 @@ exports.verifyRazorpayPayment = onCall(
 
       paidAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
+    await sendOrderEmail(orderData);
+    await sendAdminEmail(orderData);
 
     return { success: true };
   },

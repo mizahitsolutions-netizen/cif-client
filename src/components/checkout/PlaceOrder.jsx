@@ -5,12 +5,15 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-export default function PlaceOrder({ selectedAddress, deliveryFee = 0 }) {
+export default function PlaceOrder({ selectedAddress, deliveryFee = 0, expeddate }) {
   const { user } = useAuth();
   const { cart } = useCart();
   const navigate = useNavigate();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  const grandTotal = total + deliveryFee;
+  
 
   const isDisabled =
     !user || !selectedAddress || cart.length === 0 || total < 150;
@@ -24,10 +27,12 @@ export default function PlaceOrder({ selectedAddress, deliveryFee = 0 }) {
         items: cart,
         total,
         deliveryFee: deliveryFee,
+        expecteddeliverydate: expeddate,
         address: selectedAddress,
         status: "created",
         paymentStatus: "pending",
         createdAt: serverTimestamp(),
+        grandTotal,
       });
 
       navigate(`/payment/${orderRef.id}`);

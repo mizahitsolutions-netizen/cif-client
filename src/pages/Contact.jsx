@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
+import { db } from "../firebase"; // adjust path if needed
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import toast from "react-hot-toast";
 
-const Contact = () => {
+const ContactUs = () => {
   const [form, setForm] = useState({
     name: "",
     email: "",
     message: "",
   });
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Contact Us | Crumbella Innovative Foods";
@@ -14,16 +19,30 @@ const Contact = () => {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    alert("Message sent!");
+    try {
+      setLoading(true);
 
-    setForm({
-      name: "",
-      email: "",
-      message: "",
-    });
+      await addDoc(collection(db, "contacts"), {
+        ...form,
+        createdAt: serverTimestamp(),
+      });
+
+      toast.success("Message sent successfully 🎉");
+
+      setForm({
+        name: "",
+        email: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong ❌");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,8 +83,11 @@ const Contact = () => {
             className="w-full border p-3 rounded h-32"
           />
 
-          <button className="w-full bg-black text-white py-3 rounded hover:bg-gray-800">
-            Send Message
+          <button
+            disabled={loading}
+            className="w-full bg-black text-white py-3 rounded hover:bg-gray-800 disabled:opacity-50"
+          >
+            {loading ? "Sending..." : "Send Message"}
           </button>
         </form>
 
@@ -74,14 +96,14 @@ const Contact = () => {
           <h2 className="text-2xl font-semibold mb-4">Get in touch</h2>
 
           <p className="text-gray-600 mb-2">📍 Tamil Nadu, India</p>
-
-          <p className="text-gray-600 mb-2">📞 +91 9876543210</p>
-
-          <p className="text-gray-600 mb-2">📧 contact@crumbella.com</p>
+          <p className="text-gray-600 mb-2">📞 +91 86086 04700</p>
+          <p className="text-gray-600 mb-2">
+            📧 contact@crumbellainnovativefoods.in
+          </p>
         </div>
       </div>
     </div>
   );
 };
 
-export default Contact;
+export default ContactUs;
