@@ -39,12 +39,12 @@ const NavBar = () => {
   /* NAV LINK STYLE */
   const navLinkClass = ({ isActive }) =>
     `relative font-medium transition duration-300 
-    after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:bg-black 
+    after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:bg-[#ffdf00]
     after:transition-all after:duration-300
     ${
       isActive
-        ? "after:w-full text-black"
-        : "after:w-0 hover:after:w-full text-white hover:text-black"
+        ? "after:w-full text-[#ffdf00]"
+        : "after:w-0 hover:after:w-full hover:after:bg-[#ffdf00] text-white hover:text-[#ffdf00]"
     }`;
 
   const mobnavLinkClass = ({ isActive }) =>
@@ -65,7 +65,7 @@ const NavBar = () => {
           {/* LOGO */}
           <Link to="/">
             <img
-              src="/images/logo1.png"
+              src="/images/logo2.png"
               alt="Crumbella"
               className="h-12 object-contain"
             />

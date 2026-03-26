@@ -81,56 +81,102 @@ const BestSellers = () => {
     navigate("/checkout");
     window.scrollTo(0, 0);
   };
-
+  const displayProducts =
+    products.length > 4 ? [...products, ...products] : products;
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16">
-      <h2 className="text-3xl font-bold text-center mb-10">New Launches</h2>
-
-      <div
-        className="grid gap-8 justify-center"
-        style={{
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-        }}
-      >
-        {" "}
-        {products.map((product) => (
-          <div
-            key={product.id}
-            onClick={() => navigate(`/products/${product.slug}`)}
-            className="relative bg-white rounded-xl shadow hover:shadow-lg transition p-6 text-center cursor-pointer group"
-          >
-            <div className="absolute top-4 right-4 bg-green-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
-              ₹{product.price}
-            </div>
-
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-40 h-40 object-contain mx-auto group-hover:scale-105 transition"
-            />
-
-            <h3 className="mt-4 font-semibold text-lg">{product.name}</h3>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleBuyNow(product);
-              }}
-              className="mt-4 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 transition"
-            >
-              Buy Now
-            </button>
-          </div>
-        ))}
+    <section className="relative max-w-7xl mx-auto px-6 py-16 overflow-hidden bg-gradient-to-br from-green-100 via-yellow-50 to-white">
+      {" "}
+      {/* 🔥 Background Logo */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+        <img
+          src="/images/logo.png"
+          alt="logo"
+          className="
+    w-[250px] md:w-[450px]
+    opacity-20
+    blur-[1px]
+    object-contain
+  "
+        />
       </div>
+      {/* 🔥 Soft Overlay */}
+      <div className="absolute inset-0  z-[1]" />
+      {/* 🔥 Content */}
+      <div className="relative z-10">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">
+          New Launches
+        </h2>
 
-      <div className="text-center mt-12">
-        <Link
-          to="/products"
-          className="inline-block border border-black px-8 py-3 rounded-full hover:bg-black hover:text-white transition"
-        >
-          View All Products
-        </Link>
+        {/* 🔥 Scroll Wrapper */}
+        <div className="overflow-hidden">
+          <div
+            className={`
+            flex gap-6 
+            ${products.length > 4 ? "animate-scroll" : "justify-center flex-wrap"}
+          `}
+          >
+            {displayProducts.map((product) => (
+              <div
+                key={product.id}
+                onClick={() => navigate(`/products/${product.slug}`)}
+                className="
+  min-w-[250px] 
+  relative 
+  bg-white/30 
+  backdrop-blur-2xl 
+  border border-white/40 
+  rounded-2xl 
+  shadow-xl 
+  hover:shadow-2xl 
+  transition-all duration-300 
+  p-6 
+  text-center 
+  cursor-pointer 
+  group
+"
+                onMouseEnter={(e) =>
+                  (e.currentTarget.parentElement.style.animationPlayState =
+                    "paused")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.parentElement.style.animationPlayState =
+                    "running")
+                }
+              >
+                <div className="absolute top-4 right-4 bg-green-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
+                  ₹{product.price}
+                </div>
+
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-36 h-36 object-contain mx-auto group-hover:scale-105 transition"
+                />
+
+                <h3 className="mt-4 font-semibold text-lg">{product.name}</h3>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBuyNow(product);
+                  }}
+                  className="mt-4 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 transition"
+                >
+                  Buy Now
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center mt-12">
+          <Link
+            to="/products"
+            className="inline-block border border-black px-8 py-3 rounded-full hover:bg-black hover:text-white transition"
+          >
+            View All Products
+          </Link>
+        </div>
       </div>
     </section>
   );

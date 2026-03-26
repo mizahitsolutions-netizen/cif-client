@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  onSnapshot,
+} from "firebase/firestore";
 import { db } from "../firebase";
 import toast from "react-hot-toast";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail } from "lucide-react";
 
 const DistributorEnquiry = () => {
   const [loading, setLoading] = useState(false);
@@ -17,8 +22,28 @@ const DistributorEnquiry = () => {
     message: "",
   });
 
+  // ✅ Area Sales Managers (LIVE)
+  const [managers, setManagers] = useState([]);
+
   useEffect(() => {
     document.title = "Distributor Enquiry | Crumbella Innovative Foods";
+  }, []);
+
+  // ✅ Fetch live managers
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, "area_sales_managers"),
+      (snapshot) => {
+        setManagers(
+          snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })),
+        );
+      },
+    );
+
+    return () => unsub();
   }, []);
 
   const handleChange = (e) => {
@@ -44,6 +69,7 @@ const DistributorEnquiry = () => {
           <p>We will reach out to you with the best offers soon.</p>
         </div>,
       );
+
       setForm({
         name: "",
         company: "",
@@ -64,66 +90,70 @@ const DistributorEnquiry = () => {
   return (
     <div className="pt-10 min-h-screen">
       <div className="max-w-6xl mx-auto px-6 pb-10 md:py-16 grid md:grid-cols-2 gap-16">
-        {/* LEFT SIDE - ASM CONTACTS */}
-        <div className="order-1 md:order-1">
+        {/* ================= LEFT SIDE ================= */}
+        <div className="order-1">
           <h2 className="text-4xl font-bold mb-4">Area Sales Managers</h2>
 
           <p className="text-gray-600 mb-10">
             You can also contact our Area Sales Managers directly.
           </p>
 
+          {/* ✅ LIVE DATA */}
           <div className="space-y-6">
-            {/* BANGALORE */}
-            <div className="border p-5 rounded-lg">
-              <h3 className="font-semibold text-lg mb-2">Bangalore Region</h3>
+            {managers.map((item) => {
+              const cleanPhone = item.phone?.replace(/\D/g, "");
 
-              <div className="flex items-center gap-3">
-                <Phone size={18} />
-                <p>+91 90196 46454</p>
-              </div>
+              const cleanEmail = item.email?.replace(/\D/g, "");
 
-              <div className="flex items-center gap-3 mt-1">
-                <Mail size={18} />
-                <p>support@crumbellainnovativefoods.in</p>
-              </div>
-            </div>
+              return (
+                <div key={item.id} className="border p-5 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-2">{item.region}</h3>
 
-            {/* CHENNAI */}
-            <div className="border p-5 rounded-lg">
-              <h3 className="font-semibold text-lg mb-2">Chennai Region</h3>
+                  {/* PHONE */}
+                  <div className="flex items-center gap-3">
+                    <Phone size={18} />
+                    <a href={`tel:${cleanPhone}`} className="hover:underline">
+                      {item.phone}
+                    </a>
+                  </div>
 
-              <div className="flex items-center gap-3">
-                <Phone size={18} />
-                <p>+91 88707 38589</p>
-              </div>
+                  {/* EMAIL */}
+                  <div className="flex items-center gap-3 mt-1">
+                    <Mail size={18} />
 
-              <div className="flex items-center gap-3 mt-1">
-                <Mail size={18} />
-                <p>support@crumbellainnovativefoods.in</p>
-              </div>
-            </div>
+                    {item.email ? (
+                      <a
+                        href={`mailto:${item.email}?subject=${encodeURIComponent(
+                          "Distributor Enquiry - Crumbella",
+                        )}&body=${encodeURIComponent(
+                          `Hi,\n\nI am interested in becoming a distributor for your products.\n\nRegion: ${item.region}\n\nPlease share more details.\n\nThanks`,
+                        )}`}
+                        className="hover:underline"
+                      >
+                        {item.email}
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">No email available</span>
+                    )}
+                  </div>
 
-            {/* TAMIL NADU */}
-            <div className="border p-5 rounded-lg">
-              <h3 className="font-semibold text-lg mb-2">
-                Tamil Nadu (All Other Areas)
-              </h3>
-
-              <div className="flex items-center gap-3">
-                <Phone size={18} />
-                <p>+91 86086 04700</p>
-              </div>
-
-              <div className="flex items-center gap-3 mt-1">
-                <Mail size={18} />
-                <p>support@crumbellainnovativefoods.in</p>
-              </div>
-            </div>
+                  {/* WHATSAPP BUTTON */}
+                  <a
+                    href={`https://wa.me/${cleanPhone}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-3 bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                  >
+                    Chat on WhatsApp
+                  </a>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* RIGHT SIDE - FORM */}
-        <div className="order-2 md:order-2">
+        {/* ================= RIGHT SIDE ================= */}
+        <div className="order-2">
           <h2 className="text-4xl font-bold mb-4">Distributor Enquiry</h2>
 
           <p className="text-gray-600 mb-10">
