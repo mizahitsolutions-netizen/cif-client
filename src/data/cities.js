@@ -14,5 +14,5 @@ export const cities = [
   "gwalior","ujjain","satna",
   "jamshedpur","bokaro",
   "panaji","theni","dindugal",
-  "noida","gurgaon",
+  "noida","gurgaon","periyakulam","palani",
 ];

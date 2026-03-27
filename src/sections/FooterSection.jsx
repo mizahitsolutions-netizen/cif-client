@@ -162,6 +162,8 @@ const FooterSection = () => {
             © {new Date().getFullYear()} Crumbella Cookies. All Rights Reserved.
           </p>
 
+          <Link to="/cookies-in-india">Cookies Delivery Across India</Link>
+
           <div className="flex gap-8 mt-4 md:mt-0">
             <Link to="/privacy-policy" className="hover:text-white transition">
               Privacy Policy
