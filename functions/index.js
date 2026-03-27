@@ -837,3 +837,62 @@ exports.shiprocketWebhook = onRequest(
     }
   },
 );
+
+/* =====================================================
+CONTACT FORM EMAIL NOTIFICATION
+===================================================== */
+
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+
+exports.sendContactNotification = onDocumentCreated(
+  {
+    document: "contacts/{docId}",
+    region: "asia-south1",
+  },
+  async (event) => {
+    try {
+      const data = event.data.data();
+
+      const html = `
+        <div style="font-family:Arial;padding:20px;">
+          <h2>📩 New Contact Form Submission</h2>
+
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Message:</strong></p>
+          <p style="background:#f5f5f5;padding:10px;border-radius:6px;">
+            ${data.message}
+          </p>
+
+          <br/>
+
+          <p style="color:#888;font-size:12px;">
+            Submitted at: ${new Date().toLocaleString()}
+          </p>
+        </div>
+      `;
+
+      await transporter.sendMail({
+        from: '"Crumbella Contact" <no-reply@crumbellainnovativefoods.in>',
+        to: "contact@crumbellainnovativefoods.in", // 👉 your email
+        subject: "📩 New Contact Message - Crumbella",
+        html,
+      });
+
+      await transporter.sendMail({
+        from: '"Crumbella" <no-reply@crumbellainnovativefoods.in>',
+        to: data.email,
+        subject: "We received your message ✅",
+        html: `
+        <h3>Hi ${data.name},</h3>
+        <p>Thanks for contacting Crumbella Innovative Foods.</p>
+        <p>We’ll get back to you shortly 🍪</p>
+  `,
+      });
+
+      console.log("Contact email sent successfully");
+    } catch (error) {
+      console.error("Contact Email Error:", error);
+    }
+  },
+);

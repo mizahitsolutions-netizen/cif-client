@@ -1,8 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Antonio:wght@100..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
 @import "tailwindcss";
 
 @font-face {
-  font-family: "ProximaNova, sans-serif";
+  font-family: "ProximaNova";
   src: url("/fonts/ProximaNova-Regular.otf");
 }
 
@@ -18,7 +18,7 @@
   --color-milk-yellow: #e3d3bc;
   --color-red: #a02128;
   --color-milk: #faeade;
-  --font-sans: "Antonio", sans-serif;
+  --font-sans: "Poppins", sans-serif;
   --font-paragraph: "ProximaNova, sans-serif";
 }
 
@@ -29,11 +29,12 @@ body {
   box-sizing: border-box;
   background-color: #faeade;
   color: #523122;
-  font-family: "Antonio", sans-serif;
+  font-family: "Poppins", sans-serif;
   overflow-x: hidden;
   /* scroll-behavior: smooth; */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
+  letter-spacing: 0.3px;
 }
 
 body::-webkit-scrollbar {

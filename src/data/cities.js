@@ -1,0 +1,18 @@
+export const cities = [
+  "chennai","mumbai","delhi","bangalore","hyderabad","pune","kolkata",
+  "ahmedabad","jaipur","lucknow","kanpur","nagpur","indore","bhopal",
+  "visakhapatnam","patna","vadodara","ghaziabad","ludhiana","agra",
+  "nashik","faridabad","meerut","rajkot","varanasi","srinagar",
+  "aurangabad","dhanbad","amritsar","allahabad","ranchi","howrah",
+  "coimbatore","madurai","trichy","salem","tirunelveli","vellore",
+  "erode","thoothukudi","tiruppur","karur","hosur",
+  "kochi","thiruvananthapuram","kozhikode",
+  "mysore","mangalore","hubli","belgaum",
+  "chandigarh","shimla","dehradun",
+  "guwahati","imphal","aizawl",
+  "jodhpur","udaipur","kota","bikaner",
+  "gwalior","ujjain","satna",
+  "jamshedpur","bokaro",
+  "panaji","theni","dindugal",
+  "noida","gurgaon",
+];

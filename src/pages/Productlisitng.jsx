@@ -5,16 +5,24 @@ import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import ProductFilters from "../components/ProductFilters";
 import ProductSkeleton from "../components/ProductSkeleton";
+import { useSearchParams } from "react-router-dom";
 
 const ProductListing = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Filters
-  const [searchTerm, setSearchTerm] = useState("");
-  const [packageFilter, setPackageFilter] = useState("all");
-  const [sortPrice, setSortPrice] = useState("");
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || "",
+  );
+
+  const [packageFilter, setPackageFilter] = useState(
+    searchParams.get("package") || "all",
+  );
+
+  const [sortPrice, setSortPrice] = useState(searchParams.get("sort") || "");
 
   useEffect(() => {
     document.title = "Our Products | Crumbella Innovative Foods";
@@ -39,6 +47,20 @@ const ProductListing = () => {
 
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const params = {};
+
+      if (searchTerm) params.search = searchTerm;
+      if (packageFilter !== "all") params.package = packageFilter;
+      if (sortPrice) params.sort = sortPrice;
+
+      setSearchParams(params);
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [searchTerm, packageFilter, sortPrice]);
 
   // Optimized filtering
   const filteredProducts = useMemo(() => {

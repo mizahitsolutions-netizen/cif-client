@@ -16,6 +16,7 @@ import Home from "./pages/Home";
 import BulkOrder from "./pages/BulkEnquiry";
 import DistributorEnquiry from "./pages/DistributorPage";
 import ContactUs from "./pages/Contact";
+import CityPage from "./pages/CityPage";
 
 const HomePage = () => {
   useEffect(() => {
@@ -47,6 +48,7 @@ const App = () => {
         <Route path="/distributor-enquiry" element={<DistributorEnquiry />} />
         <Route path="/bulk-enquiry" element={<BulkOrder />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/cookies-in/:city" element={<CityPage />} />
       </Route>
     </Routes>
   );

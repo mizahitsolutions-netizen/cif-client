@@ -48,7 +48,7 @@ const NavBar = () => {
     }`;
 
   const mobnavLinkClass = ({ isActive }) =>
-    `relative font-medium transition duration-300 
+    `relative font-semibold transition duration-300 
     after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:bg-black 
     after:transition-all after:duration-300
     ${

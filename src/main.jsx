@@ -7,6 +7,7 @@ import { CartProvider } from "./context/CartContext.jsx";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { UIProvider } from "./context/UIContext.jsx";
+import { HelmetProvider } from "react-helmet-async";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -14,13 +15,15 @@ createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <UIProvider>
           <CartProvider>
-            <App />
-            <Toaster
-              position="top-center"
-              toastOptions={{
-                duration: 2000,
-              }}
-            />
+            <HelmetProvider>
+              <App />
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  duration: 2000,
+                }}
+              />
+            </HelmetProvider>
           </CartProvider>
         </UIProvider>
       </AuthProvider>

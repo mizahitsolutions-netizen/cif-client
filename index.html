@@ -1,31 +1,32 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Basic -->
+    <!-- ================= BASIC ================= -->
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" sizes="32x32" href="/fav.png?v=3" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Title -->
-    <title>Crumbella Innovative Foods | Cookie Brand</title>
+    <!-- ================= TITLE ================= -->
+    <title>Crumbella Innovative Foods | Premium Cookies & Bakery Brand</title>
 
-    <!-- Primary SEO -->
+    <!-- ================= SEO ================= -->
     <meta
       name="description"
-      content="Crumbella Innovative Foods is a premium cookie brand launching soon. We bake innovative, delicious cookies crafted with care."
+      content="Crumbella Innovative Foods offers premium cookies crafted with innovative recipes. Order delicious, fresh-baked cookies online."
     />
     <meta
       name="keywords"
-      content="Crumbella, cookies, innovative foods, bakery, cookie brand, launching soon"
+      content="Crumbella cookies, premium cookies India, bakery brand, buy cookies online, gourmet cookies"
     />
     <meta name="author" content="Crumbella Innovative Foods" />
+    <link rel="canonical" href="https://crumbellainnovativefoods.in/" />
 
-    <!-- Open Graph (Facebook / WhatsApp / LinkedIn) -->
+    <!-- ================= OPEN GRAPH ================= -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Crumbella Innovative Foods" />
     <meta
       property="og:description"
-      content="A premium cookie brand is on the horizon. Stay tuned for something delicious."
+      content="Premium cookies crafted with innovation. Fresh, delicious, and irresistible."
     />
     <meta property="og:url" content="https://crumbellainnovativefoods.in" />
     <meta
@@ -33,44 +34,87 @@
       content="https://crumbellainnovativefoods.in/og-image.jpg"
     />
 
-    <!-- Twitter Card -->
+    <!-- ================= TWITTER ================= -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Crumbella Innovative Foods" />
     <meta
       name="twitter:description"
-      content="Premium cookies. Innovative recipes. Launching soon."
+      content="Premium cookies. Innovative recipes. Order online now."
     />
     <meta
       name="twitter:image"
       content="https://crumbellainnovativefoods.in/og-image.jpg"
     />
 
-    <!-- Theme Color -->
+    <!-- ================= MOBILE THEME ================= -->
     <meta name="theme-color" content="#FDE68A" />
 
-    <!-- Preconnect for performance -->
+    <!-- ================= PERFORMANCE ================= -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Optional: Google Fonts -->
+    <!-- ================= FONTS ================= -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Structured Data (Fallback if JS disabled) -->
+    <!-- ================= FAVICON (ALL DEVICES) ================= -->
+    <link rel="apple-touch-icon" href="/fav.png" />
+
+    <!-- ================= STRUCTURED DATA ================= -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Organization",
+        "@type": "Bakery",
         "name": "Crumbella Innovative Foods",
+        "image": "https://crumbellainnovativefoods.in/og-image.jpg",
         "url": "https://crumbellainnovativefoods.in",
-        "logo": "https://crumbellainnovativefoods.in/logo.png",
-        "description": "Crumbella Innovative Foods is a premium cookie brand launching soon."
+        "telephone": "+91 8608604700",
+        "email": "contact@crumbellainnovativefoods.in",
+        "priceRange": "₹₹",
+        "servesCuisine": "Cookies, Bakery",
+
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "4/1A, Kuttiappar Lane, Aranmanai, Vadagarai",
+          "addressLocality": "Periyakulam",
+          "addressRegion": "Tamil Nadu",
+          "postalCode": "625601",
+          "addressCountry": "IN"
+        },
+
+        "areaServed": {
+          "@type": "State",
+          "name": "Tamil Nadu"
+        },
+
+        "sameAs": [
+          "https://www.instagram.com/crumbellainnovativefoods2025",
+          "https://www.facebook.com/share/1H5qnFnxr8/"
+        ]
       }
     </script>
 
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- ================= PRODUCT / BUSINESS SEO ================= -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FoodEstablishment",
+        "name": "Crumbella Innovative Foods",
+        "image": "https://crumbellainnovativefoods.in/og-image.jpg",
+        "url": "https://crumbellainnovativefoods.in",
+        "servesCuisine": "Bakery, Cookies",
+        "priceRange": "₹₹",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "India"
+        }
+      }
+    </script>
+
+    <!-- ================= RAZORPAY ================= -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
   </head>
 
   <body>
@@ -81,12 +125,8 @@
       </strong>
     </noscript>
 
-    <!-- React Mount Point -->
     <div id="root"></div>
 
-    <!-- <div id="recaptcha-container"></div> -->
-
-    <!-- Vite Entry -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
