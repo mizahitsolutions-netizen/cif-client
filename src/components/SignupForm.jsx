@@ -106,20 +106,29 @@ export default function SignupForm({ onSuccess }) {
   /* ---------------- PHONE AUTH ---------------- */
 
   const setupRecaptcha = () => {
-    if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-    }
+    try {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
+      }
 
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      "recaptcha-container",
-      {
-        size: "invisible",
-        callback: () => {
-          console.log("recaptcha solved");
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        "recaptcha-container",
+        {
+          size: "invisible",
+          callback: () => {
+            console.log("Recaptcha solved");
+          },
+          "expired-callback": () => {
+            console.log("Recaptcha expired");
+            window.recaptchaVerifier = null;
+          },
         },
-      },
-      auth,
-    );
+        auth,
+      );
+    } catch (err) {
+      console.error("Recaptcha init error", err);
+    }
   };
 
   const formatPhone = (phone) => {
@@ -141,6 +150,10 @@ export default function SignupForm({ onSuccess }) {
     try {
       setLoadingOTP(true);
       setupRecaptcha();
+
+      const appVerifier = window.recaptchaVerifier;
+
+      await appVerifier.render();
 
       const result = await signInWithPhoneNumber(
         auth,
