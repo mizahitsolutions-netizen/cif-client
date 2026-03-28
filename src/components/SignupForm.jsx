@@ -112,7 +112,12 @@ export default function SignupForm({ onSuccess }) {
 
     window.recaptchaVerifier = new RecaptchaVerifier(
       "recaptcha-container",
-      { size: "invisible" },
+      {
+        size: "invisible",
+        callback: () => {
+          console.log("recaptcha solved");
+        },
+      },
       auth,
     );
   };
