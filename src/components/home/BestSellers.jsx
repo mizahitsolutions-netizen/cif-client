@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { db } from "../../firebase";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -27,41 +27,15 @@ const BestSellers = () => {
   };
 
   useEffect(() => {
-    const q = query(collection(db, "products"), orderBy("price", "asc"));
+    const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
+      const newProducts = snapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .filter((p) => p.isNew === true && p.quantity > 0); // ✅ ONLY NEW + IN STOCK
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const allProducts = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      // 🔥 Group products by price
-      const priceGroups = {};
-
-      allProducts.forEach((product) => {
-        const price = Number(product.price);
-
-        if (!priceGroups[price]) {
-          priceGroups[price] = [];
-        }
-
-        priceGroups[price].push(product);
-      });
-
-      const finalProducts = [];
-
-      Object.values(priceGroups).forEach((group) => {
-        // 🔥 Find first in-stock product
-        const availableProduct = group.find(
-          (p) => p.quantity > 0, // change this if your stock field name is different
-        );
-
-        if (availableProduct) {
-          finalProducts.push(availableProduct);
-        }
-      });
-
-      setProducts(finalProducts);
+      setProducts(newProducts);
     });
 
     return unsubscribe;
@@ -81,59 +55,62 @@ const BestSellers = () => {
     navigate("/checkout");
     window.scrollTo(0, 0);
   };
+
+  const visibleProducts = products.slice(0, 3);
+
   const displayProducts =
-    products.length > 4 ? [...products, ...products] : products;
+    products.length > 3
+      ? [...visibleProducts, ...visibleProducts]
+      : visibleProducts;
+
   return (
     <section className="relative max-w-7xl mx-auto px-6 py-16 overflow-hidden bg-gradient-to-br from-green-100 via-yellow-50 to-white">
-      {" "}
-      {/* 🔥 Background Logo */}
+      {/* Background Logo */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <img
           src="/images/logo.png"
           alt="logo"
-          className="
-    w-[250px] md:w-[450px]
-    opacity-20
-    blur-[1px]
-    object-contain
-  "
+          className="w-[250px] md:w-[450px] opacity-20 blur-[1px] object-contain"
         />
       </div>
-      {/* 🔥 Soft Overlay */}
-      <div className="absolute inset-0  z-[1]" />
-      {/* 🔥 Content */}
+
+      <div className="absolute inset-0 z-[1]" />
+
       <div className="relative z-10">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">
           New Launches
         </h2>
 
-        {/* 🔥 Scroll Wrapper */}
         <div className="overflow-hidden">
           <div
             className={`
-            flex gap-6 
-            ${products.length > 4 ? "animate-scroll" : "justify-center flex-wrap"}
-          `}
+              flex gap-6 
+              ${
+                products.length > 3
+                  ? "animate-scroll"
+                  : "justify-center flex-wrap"
+              }
+            `}
           >
             {displayProducts.map((product) => (
               <div
                 key={product.id}
                 onClick={() => navigate(`/products/${product.slug}`)}
                 className="
-  min-w-[250px] 
-  relative 
-  bg-white/30 
-  backdrop-blur-2xl 
-  border border-white/40 
-  rounded-2xl 
-  shadow-xl 
-  hover:shadow-2xl 
-  transition-all duration-300 
-  p-6 
-  text-center 
-  cursor-pointer 
-  group
-"
+                  min-w-[250px] 
+                  relative 
+                  bg-white/30 
+                  backdrop-blur-2xl 
+                  border border-white/40 
+                  rounded-2xl 
+                  shadow-xl 
+                  hover:shadow-2xl 
+                  transition-all duration-300 
+                  p-6 
+                  text-center 
+                  cursor-pointer 
+                  group
+                "
                 onMouseEnter={(e) =>
                   (e.currentTarget.parentElement.style.animationPlayState =
                     "paused")
@@ -143,9 +120,10 @@ const BestSellers = () => {
                     "running")
                 }
               >
-                <div className="absolute top-4 right-4 bg-green-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
-                  ₹{product.price}
-                </div>
+                {/* NEW BADGE */}
+                <span className="absolute top-4 left-4 bg-red-500 text-white text-xs px-2 py-1 rounded-full shadow">
+                  NEW
+                </span>
 
                 <img
                   src={product.imageUrl}
@@ -171,10 +149,10 @@ const BestSellers = () => {
 
         <div className="text-center mt-12">
           <Link
-            to="/products"
+            to="/new-launches"
             className="inline-block border border-black px-8 py-3 rounded-full hover:bg-black hover:text-white transition"
           >
-            View All Products
+            View All New Launches
           </Link>
         </div>
       </div>

@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  onSnapshot,
+} from "firebase/firestore";
 import { db } from "../firebase";
 import toast from "react-hot-toast";
 import { Phone, Mail, MapPin } from "lucide-react";
 
 const BulkOrder = () => {
   const [loading, setLoading] = useState(false);
+  const [contacts, setContacts] = useState([]);
 
   const [form, setForm] = useState({
     company: "",
@@ -59,6 +65,22 @@ const BulkOrder = () => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, "bulk_contact_details"),
+      (snapshot) => {
+        setContacts(
+          snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })),
+        );
+      },
+    );
+
+    return () => unsub();
+  }, []);
+
   return (
     <div className="pt-10 min-h-screen">
       <div className="max-w-6xl mx-auto px-6 pb-10 md:py-16 grid md:grid-cols-2 gap-16">
@@ -71,15 +93,35 @@ const BulkOrder = () => {
           </p>
 
           <div className="space-y-8">
-            <div className="flex items-start gap-4">
-              <Phone className="text-brown-700" />
-              <p className="text-lg">+91 86086 04700</p>
-            </div>
+            {contacts.length === 0 ? (
+              <p className="text-gray-500">No contact details available</p>
+            ) : (
+              contacts.map((item) => (
+                <div key={item.id} className="space-y-4">
+                  {/* PHONE */}
+                  <div className="flex items-start gap-4">
+                    <Phone className="text-brown-700" />
+                    <a
+                      href={`tel:${item.phone}`}
+                      className="text-lg hover:underline"
+                    >
+                      {item.phone}
+                    </a>
+                  </div>
 
-            <div className="flex items-start gap-4">
-              <Mail className="text-brown-700" />
-              <p className="text-lg">contact@crumbellainnovativefoods.in</p>
-            </div>
+                  {/* EMAIL */}
+                  <div className="flex items-start gap-4">
+                    <Mail className="text-brown-700" />
+                    <a
+                      href={`mailto:${item.email}?subject=Bulk Order Enquiry`}
+                      className="text-lg hover:underline"
+                    >
+                      {item.email}
+                    </a>
+                  </div>
+                </div>
+              ))
+            )}
 
             <div className="flex items-start gap-4">
               <MapPin className="text-brown-700" />

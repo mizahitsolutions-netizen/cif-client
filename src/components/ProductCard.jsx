@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, basePath = "products" }) => {
   const isOutOfStock = product.quantity === 0;
 
   return (
@@ -24,9 +24,9 @@ const ProductCard = ({ product }) => {
 
         <div className="flex justify-between items-center">
           <span className="text-lg font-bold">₹{product.price}</span>
-
+          {/* ✅ DYNAMIC ROUTE */}
           <Link
-            to={`/products/${product.slug}`}
+            to={`/${basePath}/${product.slug}`}
             className={`px-4 py-2 rounded-lg text-sm transition ${
               isOutOfStock
                 ? "bg-gray-400 cursor-not-allowed"

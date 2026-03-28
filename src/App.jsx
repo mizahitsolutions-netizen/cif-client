@@ -18,6 +18,7 @@ import DistributorEnquiry from "./pages/DistributorPage";
 import ContactUs from "./pages/Contact";
 import CityPage from "./pages/CityPage";
 import IndiaPage from "./pages/IndiaPage";
+import NewLaunches from "./pages/NewLaunches";
 
 const HomePage = () => {
   useEffect(() => {
@@ -51,6 +52,8 @@ const App = () => {
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/cookies-in/:city" element={<CityPage />} />
         <Route path="/cookies-in-india" element={<IndiaPage />} />
+        <Route path="/new-launches" element={<NewLaunches />} />
+        <Route path="/new-launches/:slug" element={<ProductDetail />} />
       </Route>
     </Routes>
   );

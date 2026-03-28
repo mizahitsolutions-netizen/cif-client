@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "../firebase";
@@ -24,6 +24,10 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [related, setRelated] = useState([]);
+
+  const location = useLocation();
+
+  const isNewLaunch = location.pathname.includes("new-launches");
 
   /* ---------------- DYNAMIC TOTAL PRICE ---------------- */
   const totalPrice = useMemo(() => {
@@ -235,11 +239,21 @@ const ProductDetail = () => {
         <Link to="/" className="hover:text-black">
           Home
         </Link>
+
         <span className="mx-2">/</span>
-        <Link to="/products" className="hover:text-black">
-          Products
-        </Link>
+
+        {isNewLaunch ? (
+          <Link to="/new-launches" className="hover:text-black">
+            New Launches
+          </Link>
+        ) : (
+          <Link to="/products" className="hover:text-black">
+            Products
+          </Link>
+        )}
+
         <span className="mx-2">/</span>
+
         <span className="text-black font-medium">{product.name}</span>
       </nav>
 
