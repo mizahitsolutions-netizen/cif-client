@@ -91,6 +91,7 @@ export default function SignupForm({ onSuccess }) {
       });
 
       toast.success("Account created 🎉");
+      navigate("/profile");
       onSuccess();
     } catch (err) {
       setErrors({ email: err.message });
