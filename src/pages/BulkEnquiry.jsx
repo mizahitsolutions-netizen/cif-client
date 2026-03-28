@@ -78,7 +78,7 @@ const BulkOrder = () => {
 
             <div className="flex items-start gap-4">
               <Mail className="text-brown-700" />
-              <p className="text-lg">sale@crumbellainnovativefoods.in</p>
+              <p className="text-lg">contact@crumbellainnovativefoods.in</p>
             </div>
 
             <div className="flex items-start gap-4">
