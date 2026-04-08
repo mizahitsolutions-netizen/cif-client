@@ -1,21 +1,32 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 const About = () => {
+  const [data, setData] = useState(null);
+
   useEffect(() => {
     document.title = "About Us | Crumbella Innovative Foods";
+
+    const fetchData = async () => {
+      const snap = await getDoc(doc(db, "about_page", "main"));
+      if (snap.exists()) {
+        setData(snap.data());
+      }
+    };
+
+    fetchData();
   }, []);
+
+  if (!data) return <p className="text-center py-20">Loading...</p>;
 
   return (
     <div className="pt-18">
-      {/* HERO SECTION */}
+      {/* HERO */}
       <section className="w-full bg-[#f8f4ef]">
         <div className="relative w-full">
-          <img
-            src="/images/cookies-hero1.png"
-            alt="Crumbella Hero"
-            className="w-full h-auto"
-          />
+          <img src={data.heroImage} alt="Hero" className="w-full h-auto" />
 
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
             <Link
@@ -28,54 +39,22 @@ const About = () => {
         </div>
       </section>
 
-      {/* OUR STORY */}
+      {/* STORY */}
       <section className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center">
         <img
-          src="/images/baker.png"
-          alt="Baker"
+          src={data.storyImage}
+          alt="Story"
           className="rounded-xl shadow-lg"
         />
 
         <div>
-          <h2 className="text-3xl font-bold text-center md:text-left mb-6">
-            Our Story
-          </h2>
+          <h2 className="text-3xl font-bold mb-6">{data.storyTitle}</h2>
 
-          <p className="text-gray-700 mb-4">
-            Crumbella Innovative Foods was born from a simple yet powerful idea
-            — to create food that not only tastes delightful but also builds
-            lasting trust with every bite. What began as a passion-driven
-            initiative has grown into a brand dedicated to delivering excellence
-            in every product we craft.
-          </p>
-
-          <p className="text-gray-700 mb-4">
-            Rooted in tradition and inspired by modern innovation, we carefully
-            blend time-honored recipes with advanced food processing techniques.
-            This unique approach allows us to maintain authentic flavors while
-            ensuring consistency, safety, and superior quality across all our
-            offerings.
-          </p>
-
-          <p className="text-gray-700 mb-4">
-            At Crumbella, we believe that great food starts with great
-            ingredients. From selecting premium grains to maintaining strict
-            quality standards throughout production, every step is designed to
-            deliver products that families can enjoy with confidence.
-          </p>
-
-          <p className="text-gray-700 mb-4">
-            Over time, our commitment to innovation has helped us expand beyond
-            traditional bakery items into a diverse range of cookies,
-            millet-based products, and health-focused snacks that cater to
-            evolving consumer needs.
-          </p>
-
-          <p className="text-gray-700">
-            Today, Crumbella stands as a symbol of trust, taste, and innovation
-            — proudly serving customers across India while continuously striving
-            to redefine the future of food.
-          </p>
+          <div className="space-y-6 text-gray-700 leading-8 text-[17px]">
+            {data.storyParagraphs?.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -87,23 +66,14 @@ const About = () => {
             Our Vision
           </h3>
 
-          <p className="text-gray-700 text-center mb-6">
-            To become a trusted and leading name in the Indian food industry by
-            delivering innovative, high-quality, and affordable food products.
-          </p>
+          <p className="text-gray-700 text-center mb-6">{data.visionText}</p>
 
           <div className="flex justify-around text-center">
-            <div>
-              <p className="font-semibold">Premium Ingredients</p>
-            </div>
-
-            <div>
-              <p className="font-semibold">Strict Quality Controls</p>
-            </div>
-
-            <div>
-              <p className="font-semibold">Continual Innovation</p>
-            </div>
+            {data.visionPoints.map((item, i) => (
+              <div key={i}>
+                <p className="font-semibold">{item}</p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -114,43 +84,37 @@ const About = () => {
           </h3>
 
           <ul className="space-y-3 text-gray-700">
-            <li>✔ Deliver consistent quality and safety in every pack</li>
-            <li>✔ Innovate with new flavors and healthy options</li>
-            <li>✔ Expand our presence across India</li>
-            <li>✔ Build long-term relationships with customers and partners</li>
+            {data.missionPoints.map((item, i) => (
+              <li key={i}>✔ {item}</li>
+            ))}
           </ul>
         </div>
       </section>
 
-      {/* WHAT WE OFFER */}
+      {/* OFFER */}
       <section className="max-w-6xl mx-auto px-6 pb-16 grid md:grid-cols-2 gap-12 items-center">
         <div>
           <h3 className="text-3xl font-semibold mb-6">What We Offer</h3>
 
           <ul className="space-y-3 text-gray-700 text-lg">
-            <li>✔ Premium Cookies</li>
-            <li>✔ Wheat & Millet-Based Bakery Products</li>
-            <li>✔ Innovative Snack Variants</li>
-            <li>✔ Health-Focused Food Options</li>
+            {data.offerList.map((item, i) => (
+              <li key={i}>✔ {item}</li>
+            ))}
           </ul>
         </div>
 
         <img
-          src="/images/cookies-offer.png"
-          alt="Cookies"
+          src={data.offerImage}
+          alt="Offer"
           className="rounded-xl shadow-lg"
         />
       </section>
 
-      {/* FOOTER MESSAGE */}
+      {/* FOOTER */}
       <section className="bg-[#efe5da] py-12 text-center">
-        <h2 className="text-3xl font-semibold mb-2">
-          Taste the Joy in Every Bite!
-        </h2>
+        <h2 className="text-3xl font-semibold mb-2">{data.footerTitle}</h2>
 
-        <p className="text-gray-700">
-          Explore our products and experience the Crumbella difference today.
-        </p>
+        <p className="text-gray-700">{data.footerText}</p>
       </section>
     </div>
   );

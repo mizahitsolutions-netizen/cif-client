@@ -1,4 +1,4 @@
-import { ShoppingCart, UserCircle, Menu, X } from "lucide-react";
+import { ShoppingCart, UserCircle, Menu, X, Video } from "lucide-react";
 
 import { useCart } from "../context/CartContext";
 import { useUI } from "../context/UIContext";
@@ -100,13 +100,20 @@ const NavBar = () => {
 
           {/* RIGHT SECTION */}
           <div className="flex items-center gap-4">
+            {/* VIDEO ICON 🔥 */}
+            <Link to="/payment-guide">
+              <Video
+                size={28}
+                className="text-white cursor-pointer hover:text-[#ffdf00] transition"
+              />
+            </Link>
             {/* LOGIN / PROFILE */}
             {!user ? (
               <button
                 onClick={openLogin}
                 className="hidden md:flex items-center gap-2 border border-white text-white px-4 py-2 rounded-full hover:bg-black hover:text-white transition cursor-pointer"
               >
-                <UserCircle size={20} className="text-white"/>
+                <UserCircle size={20} className="text-white" />
                 Login
               </button>
             ) : (
@@ -160,7 +167,7 @@ const NavBar = () => {
           {/* CLOSE BUTTON */}
           <div className="flex justify-end p-4">
             <button onClick={() => setMobileOpen(false)}>
-              <X size={28} className="cursor-pointer"/>
+              <X size={28} className="cursor-pointer" />
             </button>
           </div>
 
@@ -212,6 +219,14 @@ const NavBar = () => {
               className={mobnavLinkClass}
             >
               Contact Us
+            </NavLink>
+
+            <NavLink
+              to="/payment-guide"
+              onClick={() => setMobileOpen(false)}
+              className={mobnavLinkClass}
+            >
+              Payment Guide
             </NavLink>
 
             <NavLink

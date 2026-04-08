@@ -19,6 +19,7 @@ import ContactUs from "./pages/Contact";
 import CityPage from "./pages/CityPage";
 import IndiaPage from "./pages/IndiaPage";
 import NewLaunches from "./pages/NewLaunches";
+import Videos from "./pages/Videos";
 
 const HomePage = () => {
   useEffect(() => {
@@ -40,6 +41,7 @@ const App = () => {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:slug" element={<ProductDetail />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/payment-guide" element={<Videos />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment/:orderId" element={<PaymentPage />} />
