@@ -62,7 +62,7 @@ const FooterSection = () => {
     <section className="bg-[#1C1C1F] text-[#E5E5E5] relative overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 md:px-16 py-20">
         {/* BIG TAGLINE */}
-        <h1 className="text-center text-5xl md:text-7xl font-light tracking-widest mb-16">
+        <h1 className="text-center text-2xl sm:text-4xl md:text-7xl font-light tracking-widest mb-16">
           #BAKEDWITHLOVE
         </h1>
 
