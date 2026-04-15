@@ -56,12 +56,11 @@ const BestSellers = () => {
     window.scrollTo(0, 0);
   };
 
-  const visibleProducts = products.slice(0, 3);
 
-  const displayProducts =
-    products.length > 3
-      ? [...visibleProducts, ...visibleProducts]
-      : visibleProducts;
+const displayProducts =
+  products.length > 10
+    ? [...products, ...products] // for smooth scroll
+    : products;
 
   return (
     <section className="relative max-w-7xl mx-auto px-6 py-16 overflow-hidden bg-gradient-to-br from-green-100 via-yellow-50 to-white">

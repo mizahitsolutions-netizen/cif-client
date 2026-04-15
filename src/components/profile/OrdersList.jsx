@@ -4,7 +4,9 @@ import {
   query,
   where,
   orderBy,
-  onSnapshot,
+  getDocs,
+  limit,
+  startAfter,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
@@ -13,29 +15,42 @@ export default function OrdersList() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     if (!user) return;
 
-    const q = query(
-      collection(db, "orders"),
-      where("userId", "==", user.uid),
-      where("status", "==", "confirmed"),
-      orderBy("createdAt", "desc")
-    );
-
-    const unsubscribe = onSnapshot(q, (snap) => {
-      setOrders(
-        snap.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        }))
-      );
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    fetchOrders();
   }, [user]);
+
+  const fetchOrders = async () => {
+    try {
+      const q = query(
+        collection(db, "orders"),
+        where("userId", "==", user.uid),
+        where("status", "==", "confirmed"),
+        orderBy("createdAt", "desc"),
+        limit(3), // 🔥 first 3 orders
+      );
+
+      const snap = await getDocs(q);
+
+      const data = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      setOrders(data);
+      setLastDoc(snap.docs[snap.docs.length - 1]);
+      setHasMore(snap.docs.length === 3);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
+  };
 
   const FREE_DELIVERY_THRESHOLD = 500;
 
@@ -77,7 +92,7 @@ export default function OrdersList() {
     if (order.expecteddeliverydate) {
       const deliveryDate = new Date(baseDate);
       deliveryDate.setDate(
-        baseDate.getDate() + Number(order.expecteddeliverydate)
+        baseDate.getDate() + Number(order.expecteddeliverydate),
       );
 
       return deliveryDate.toLocaleDateString("en-IN", {
@@ -87,6 +102,57 @@ export default function OrdersList() {
     }
 
     return "";
+  };
+
+  const loadMore = async () => {
+    if (!lastDoc) return;
+
+    try {
+      setLoadingMore(true);
+
+      const q = query(
+        collection(db, "orders"),
+        where("userId", "==", user.uid),
+        where("status", "==", "confirmed"),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDoc),
+        limit(3),
+      );
+
+      const snap = await getDocs(q);
+
+      const data = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      setOrders((prev) => [...prev, ...data]);
+      setLastDoc(snap.docs[snap.docs.length - 1]);
+      setHasMore(snap.docs.length === 3);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const formatOrderDateTime = (timestamp) => {
+    if (!timestamp) return "";
+
+    const date = timestamp.toDate();
+
+    const formattedDate = date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+    const formattedTime = date.toLocaleTimeString("en-IN", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    return `${formattedDate}, ${formattedTime}`;
   };
 
   const getDeliveryRange = (order) => {
@@ -124,15 +190,21 @@ export default function OrdersList() {
                 >
                   {/* 🔥 TOP BAR */}
                   <div className="flex justify-between items-center mb-4">
-                    <p className="font-semibold text-gray-800">
-                      Order #{order.id.slice(0, 8).toUpperCase()}
-                    </p>
+                    <div>
+                      <p className="font-semibold text-gray-800">
+                        Order #{order.id.slice(0, 8).toUpperCase()}
+                      </p>
+
+                      <p className="text-xs text-gray-600 mt-1">
+                        🗓 Ordered on: {formatOrderDateTime(order.createdAt)}
+                      </p>
+                    </div>
 
                     <div className="flex gap-2">
                       {/* STATUS BADGE */}
                       <span
                         className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusBadge(
-                          order.shippingStatus || order.status
+                          order.shippingStatus || order.status,
                         )}`}
                       >
                         {order.shippingStatus || order.status}
@@ -141,12 +213,10 @@ export default function OrdersList() {
                       {/* PAYMENT BADGE */}
                       <span
                         className={`text-xs font-semibold px-3 py-1 rounded-full ${getPaymentBadge(
-                          order.paymentMethod
+                          order.paymentMethod,
                         )}`}
                       >
-                        {order.paymentMethod === "cod"
-                          ? "COD 💰"
-                          : "Paid 💳"}
+                        {order.paymentMethod === "cod" ? "COD 💰" : "Paid 💳"}
                       </span>
                     </div>
                   </div>
@@ -240,6 +310,17 @@ export default function OrdersList() {
           </div>
         )}
       </div>
+      {hasMore && (
+        <div className="text-center mt-6">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="px-6 py-2 bg-black text-white rounded-lg"
+          >
+            {loadingMore ? "Loading..." : "Load More"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
