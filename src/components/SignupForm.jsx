@@ -1,10 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
@@ -14,62 +12,30 @@ import { FcGoogle } from "react-icons/fc";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function SignupForm({ onSuccess }) {
-  const [tab, setTab] = useState("email");
-
-  // Email
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Phone
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpStep, setOtpStep] = useState("phone");
-  const [countdown, setCountdown] = useState(0);
-
-  const confirmationRef = useRef(null);
-  const recaptchaRef = useRef(null);
-
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const provider = new GoogleAuthProvider();
 
-  // Reset when switching tab
-  useEffect(() => {
-    setErrors({});
-    setOtp("");
-    setPhone("");
-    setOtpStep("phone");
-  }, [tab]);
+  /* -------------------------------- */
+  /* GOOGLE LOGIN */
+  /* -------------------------------- */
 
-  // Countdown
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [countdown]);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (recaptchaRef.current) recaptchaRef.current.clear();
-    };
-  }, []);
-
-  /* ================= GOOGLE ================= */
   const handleGoogle = async () => {
     try {
       const res = await signInWithPopup(auth, provider);
-      const userRef = doc(db, "users", res.user.uid);
-      const snap = await getDoc(userRef);
 
-      if (!snap.exists()) {
+      const userRef = doc(db, "users", res.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
         await setDoc(userRef, {
           email: res.user.email,
           name: res.user.displayName,
@@ -79,32 +45,44 @@ export default function SignupForm({ onSuccess }) {
       }
 
       toast.success("Welcome 🎉");
-      navigate("/profile");
+      navigate("/profile", { state: { tab: "password" } });
       onSuccess();
-    } catch (err) {
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
-  /* ================= EMAIL ================= */
-  const validateEmail = () => {
-    const err = {};
-    if (!email) err.email = "Email required";
-    if (!password || password.length < 6)
-      err.password = "Min 6 characters required";
-    if (password !== confirmPassword)
-      err.confirmPassword = "Passwords do not match";
+  /* -------------------------------- */
+  /* VALIDATION */
+  /* -------------------------------- */
 
-    setErrors(err);
-    return Object.keys(err).length === 0;
+  const validate = () => {
+    const newErrors = {};
+
+    if (!email) newErrors.email = "Email is required";
+
+    if (!password) newErrors.password = "Password is required";
+    else if (password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password";
+    else if (password !== confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
   };
 
+  /* -------------------------------- */
+  /* EMAIL SIGNUP */
+  /* -------------------------------- */
+
   const handleEmailSignup = async () => {
-    if (!validateEmail()) return;
+    if (!validate()) return;
 
     try {
-      setLoading(true);
-
       const res = await createUserWithEmailAndPassword(auth, email, password);
 
       await setDoc(doc(db, "users", res.user.uid), {
@@ -117,220 +95,99 @@ export default function SignupForm({ onSuccess }) {
       onSuccess();
     } catch (err) {
       setErrors({ email: err.message });
-    } finally {
-      setLoading(false);
     }
   };
 
-  /* ================= PHONE ================= */
-  const setupRecaptcha = async () => {
-    if (recaptchaRef.current) {
-      recaptchaRef.current.clear();
-      recaptchaRef.current = null;
-    }
-
-    recaptchaRef.current = new RecaptchaVerifier(
-      "recaptcha-signup",
-      { size: "normal" },
-      auth,
-    );
-
-    await recaptchaRef.current.render();
-  };
-
-  const handleSendOTP = async () => {
-    setErrors({});
-
-    let cleaned = phone.replace(/\D/g, "");
-
-    if (cleaned.length !== 10) {
-      setErrors({ phone: "Enter valid 10-digit number" });
-      return;
-    }
-
-    cleaned = "+91" + cleaned;
-
-    try {
-      setLoading(true);
-
-      await setupRecaptcha();
-
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        cleaned,
-        recaptchaRef.current,
-      );
-
-      confirmationRef.current = confirmation;
-      setOtpStep("otp");
-      setCountdown(30);
-
-      toast.success("OTP sent 🚀");
-    } catch (err) {
-      console.error(err);
-
-      setErrors({
-        phone:
-          err.code === "auth/too-many-requests"
-            ? "Too many attempts. Try later."
-            : err.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    setErrors({});
-
-    if (!confirmationRef.current) {
-      toast.error("Request OTP first");
-      return;
-    }
-
-    if (otp.length !== 6) {
-      setErrors({ otp: "Enter 6-digit OTP" });
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const result = await confirmationRef.current.confirm(otp);
-      const user = result.user;
-
-      const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
-
-      if (!snap.exists()) {
-        await setDoc(userRef, {
-          phone: user.phoneNumber,
-          createdAt: serverTimestamp(),
-        });
-      }
-
-      toast.success("Account created 🎉");
-      navigate("/profile");
-      onSuccess();
-    } catch {
-      setErrors({ otp: "Invalid OTP" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ================= UI ================= */
   return (
     <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg px-8 py-8 space-y-6">
-      {/* Tabs */}
-      <div className="flex rounded-xl border overflow-hidden">
-        <button
-          onClick={() => setTab("email")}
-          className={`flex-1 py-2 ${
-            tab === "email" ? "bg-black text-white" : ""
-          }`}
-        >
-          Email
-        </button>
-        <button
-          onClick={() => setTab("phone")}
-          className={`flex-1 py-2 ${
-            tab === "phone" ? "bg-black text-white" : ""
-          }`}
-        >
-          Phone
-        </button>
-      </div>
+      {/* <h2 className="text-xl font-semibold text-center">Create Account</h2> */}
 
       {/* EMAIL */}
-      {tab === "email" && (
-        <>
-          <input
-            placeholder="Email"
-            className="w-full border p-3 rounded-xl"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
 
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            className="w-full border p-3 rounded-xl"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+      <div className="space-y-1">
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full border p-3 rounded-xl"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+      </div>
 
-          <input
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm Password"
-            className="w-full border p-3 rounded-xl"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
+      {/* PASSWORD */}
 
-          <button
-            onClick={handleEmailSignup}
-            className="w-full bg-black text-white py-3 rounded-xl"
-          >
-            Create Account
-          </button>
-        </>
-      )}
+      <div className="space-y-1 relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Password"
+          className="w-full border p-3 rounded-xl pr-12"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      {/* PHONE */}
-      {tab === "phone" && (
-        <>
-          {otpStep === "phone" && (
-            <>
-              <div className="flex">
-                <span className="px-3 py-3 bg-gray-100 border rounded-l-xl">
-                  +91
-                </span>
-                <input
-                  className="w-full border p-3 rounded-r-xl"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                  placeholder="Enter phone"
-                />
-              </div>
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-3 text-gray-500 cursor-pointer"
+        >
+          {showPassword ? <FiEyeOff /> : <FiEye />}
+        </button>
 
-              <div id="recaptcha-signup"></div>
+        {errors.password && (
+          <p className="text-red-500 text-sm">{errors.password}</p>
+        )}
+      </div>
 
-              <button
-                onClick={handleSendOTP}
-                className="w-full bg-black text-white py-3 rounded-xl"
-              >
-                Send OTP
-              </button>
-            </>
-          )}
+      {/* CONFIRM PASSWORD */}
 
-          {otpStep === "otp" && (
-            <>
-              <input
-                className="w-full border p-3 rounded-xl text-center"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                placeholder="Enter OTP"
-              />
+      <div className="space-y-1 relative">
+        <input
+          type={showConfirmPassword ? "text" : "password"}
+          placeholder="Confirm password"
+          className="w-full border p-3 rounded-xl pr-12"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
 
-              <button
-                onClick={handleVerifyOTP}
-                className="w-full bg-black text-white py-3 rounded-xl"
-              >
-                Verify OTP
-              </button>
-            </>
-          )}
-        </>
-      )}
+        <button
+          type="button"
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          className="absolute right-3 top-3 text-gray-500 cursor-pointer"
+        >
+          {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+        </button>
 
-      {/* Google */}
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
+        )}
+      </div>
+
+      {/* SIGNUP BUTTON */}
+
+      <button
+        onClick={handleEmailSignup}
+        className="w-full bg-black text-white py-3 rounded-xl cursor-pointer"
+      >
+        Create Account
+      </button>
+
+      {/* DIVIDER */}
+
+      <div className="flex items-center gap-3 text-gray-400 text-sm">
+        <div className="flex-1 h-[1px] bg-gray-200"></div>
+        OR
+        <div className="flex-1 h-[1px] bg-gray-200"></div>
+      </div>
+
+      {/* GOOGLE BUTTON */}
+
       <button
         onClick={handleGoogle}
-        className="w-full flex justify-center gap-2 border py-3 rounded-xl"
+        className="w-full flex items-center justify-center gap-3 border py-3 rounded-xl hover:bg-gray-50 transition cursor-pointer"
       >
-        <FcGoogle /> Continue with Google
+        <FcGoogle size={20} />
+        Continue with Google
       </button>
     </div>
   );
