@@ -119,7 +119,7 @@ exports.getShippingRates = onCall(
   { region: "asia-south1" },
   async ({ data }) => {
     try {
-      const { pincode, orderValue } = data;
+      const { pincode, orderValue, isCOD } = data;
 
       if (!pincode) {
         throw new HttpsError("invalid-argument", "Pincode required");
@@ -134,7 +134,7 @@ exports.getShippingRates = onCall(
             pickup_postcode: "625601",
             delivery_postcode: String(pincode),
             weight: DEFAULT_WEIGHT,
-            cod: 0,
+            cod: isCOD ? 1 : 0,
             declared_value: orderValue || 500,
             length: DEFAULT_LENGTH,
             breadth: DEFAULT_BREADTH,
@@ -152,6 +152,10 @@ exports.getShippingRates = onCall(
         throw new HttpsError("failed-precondition", "No courier available");
       }
 
+      /* 🔥 CHECK COD AVAILABILITY */
+      const codAvailable = couriers.some((c) => c.cod === 1);
+
+      /* PICK CHEAPEST */
       const cheapest = couriers.reduce((prev, curr) =>
         prev.rate < curr.rate ? prev : curr,
       );
@@ -161,6 +165,7 @@ exports.getShippingRates = onCall(
         courierName: cheapest.courier_name,
         courierId: cheapest.courier_company_id,
         estimatedDays: cheapest.estimated_delivery_days,
+        codAvailable,
       };
     } catch (err) {
       console.error(
@@ -230,7 +235,7 @@ async function createShiprocketOrder(order) {
         selling_price: item.price,
       })),
 
-      payment_method: "Prepaid",
+      payment_method: order.paymentMethod === "cod" ? "COD" : "Prepaid",
       sub_total: order.total,
 
       length: DEFAULT_LENGTH,
@@ -258,6 +263,125 @@ async function createShiprocketOrder(order) {
     throw err;
   }
 }
+
+/* =====================================================
+CREATE COD ORDER
+===================================================== */
+
+exports.createCODOrder = onCall(
+  { region: "asia-south1" },
+  async ({ data }) => {
+    try {
+      const { orderId } = data;
+
+      const orderRef = db.collection("orders").doc(orderId);
+      const snap = await orderRef.get();
+
+      if (!snap.exists) {
+        throw new HttpsError("not-found", "Order not found");
+      }
+
+      // 🔥 FORCE COD
+      const orderData = {
+        id: orderId,
+        ...snap.data(),
+        paymentMethod: "cod",
+      };
+
+      /* ---------------- CREATE SHIPROCKET ORDER ---------------- */
+      const shipment = await createShiprocketOrder(orderData);
+
+      const shipmentId = shipment.shipment_id;
+      const shiprocketOrderId = shipment.order_id;
+
+      // ✅ USE SHIPROCKET RESPONSE DIRECTLY
+      let awbData = {
+        awb_code: shipment.awb_code || "",
+        courier_name: shipment.courier_name || "",
+      };
+
+      /* ---------------- TRY ASSIGN COURIER (SAFE) ---------------- */
+      try {
+        const awb = await assignCourier(shipmentId);
+        awbData = awb.response.data;
+      } catch (err) {
+        const msg = err.response?.data?.message;
+
+        if (msg?.includes("Cannot reassign")) {
+          console.log("Courier already assigned by Shiprocket ✅");
+        } else {
+          console.error("ASSIGN COURIER ERROR:", msg);
+          // ❗ DO NOT throw
+        }
+      }
+
+      /* ---------------- LABEL ---------------- */
+      let label = null;
+      try {
+        label = await generateLabel(shipmentId);
+      } catch (err) {
+        console.error("LABEL ERROR:", err.response?.data || err.message);
+      }
+
+      /* ---------------- INVOICE ---------------- */
+      let invoice = null;
+      try {
+        invoice = await generateInvoice(shiprocketOrderId);
+      } catch (err) {
+        console.error("INVOICE ERROR:", err.response?.data || err.message);
+      }
+
+      /* ---------------- PICKUP ---------------- */
+      let pickup = null;
+      try {
+        pickup = await schedulePickup(shipmentId);
+      } catch (err) {
+        const msg = err.response?.data?.message;
+
+        if (msg === "Already in Pickup Queue.") {
+          console.log("Pickup already scheduled ✅");
+        } else {
+          console.error("PICKUP ERROR:", msg);
+        }
+      }
+
+      /* ---------------- UPDATE FIRESTORE ---------------- */
+      await orderRef.update({
+        paymentMethod: "cod",
+        paymentStatus: "pending",
+        status: "confirmed",
+
+        shiprocketOrderId,
+        shipmentId,
+
+        awb: awbData?.awb_code || "",
+        courier: awbData?.courier_name || "",
+
+        shippingLabel: label?.label_url || "",
+        shippingInvoice: invoice?.invoice_url || "",
+
+        pickupToken: pickup?.pickup_token_number || "",
+
+        shippingStatus: "pickup_scheduled",
+      });
+
+      /* ---------------- EMAILS ---------------- */
+      await sendOrderEmail(orderData);
+      await sendAdminEmail(orderData);
+
+      return { success: true };
+
+    } catch (err) {
+      console.error(
+        "COD ERROR FULL:",
+        JSON.stringify(err.response?.data || err.message, null, 2)
+      );
+
+      // 🔥 DO NOT FAIL FRONTEND IF ORDER ALREADY CREATED
+      return { success: true };
+    }
+  }
+);
 
 /* =====================================================
 ASSIGN COURIER

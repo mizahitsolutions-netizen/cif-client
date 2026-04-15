@@ -22,38 +22,40 @@ export default function Videos() {
 
   return (
     <div className="pt-5 sm:pt-20 px-4 sm:px-6">
-      {" "}
+      {/* PAGE HEADER */}
+      <div className="max-w-6xl mx-auto text-center mb-10 sm:mb-14">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3">
+          Our Videos
+        </h1>
+        <p className="text-gray-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
+          Explore our latest videos, updates, and highlights all in one place.
+        </p>
+      </div>
+
       {/* EMPTY STATE */}
       {videos.length === 0 && (
-        <p className="text-center text-gray-500">No videos available</p>
+        <p className="text-center text-gray-500 mt-10">No videos available</p>
       )}
-      {/* CENTER CONTAINER */}
-      <div className="max-w-4xl mx-auto space-y-16">
+
+      {/* GRID */}
+      <div className="max-w-6xl mx-auto grid gap-8 sm:gap-10 md:gap-12 sm:grid-cols-2 lg:grid-cols-3 pb-10">
         {videos.map((video) => (
-          <div key={video.id} className="border-b pb-10 text-center">
-            {/* TITLE */}
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-3">
-              {video.title}
-            </h2>
-
-            {/* DESCRIPTION */}
-            <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-5 max-w-2xl mx-auto leading-relaxed">
-              {video.description}
-            </p>
-
+          <div
+            key={video.id}
+            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition"
+          >
             {/* VIDEO */}
-            <div className="relative w-full bg-black rounded-xl overflow-hidden">
-              {/* LOADER */}
+            <div className="relative bg-black">
               {loadingVideo[video.id] !== false && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-10">
-                  <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
 
               <video
                 src={video.videoUrl}
                 controls
-                className="w-full max-h-[220px] sm:max-h-[350px] md:max-h-[500px] object-contain"
+                className="w-full h-[200px] object-cover"
                 onLoadedData={() =>
                   setLoadingVideo((prev) => ({
                     ...prev,
@@ -61,6 +63,17 @@ export default function Videos() {
                   }))
                 }
               />
+            </div>
+
+            {/* CONTENT */}
+            <div className="p-4 sm:p-5">
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 line-clamp-1">
+                {video.title}
+              </h2>
+
+              <p className="text-gray-600 text-sm sm:text-base line-clamp-2">
+                {video.description}
+              </p>
             </div>
           </div>
         ))}

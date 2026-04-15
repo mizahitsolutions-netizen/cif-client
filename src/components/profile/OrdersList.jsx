@@ -21,7 +21,7 @@ export default function OrdersList() {
       collection(db, "orders"),
       where("userId", "==", user.uid),
       where("status", "==", "confirmed"),
-      orderBy("createdAt", "desc"),
+      orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snap) => {
@@ -29,7 +29,7 @@ export default function OrdersList() {
         snap.docs.map((d) => ({
           id: d.id,
           ...d.data(),
-        })),
+        }))
       );
       setLoading(false);
     });
@@ -39,30 +39,68 @@ export default function OrdersList() {
 
   const FREE_DELIVERY_THRESHOLD = 500;
 
+  /* 🔥 STATUS BADGE */
+  const getStatusBadge = (status) => {
+    const map = {
+      confirmed: "bg-blue-100 text-blue-700",
+      shipped: "bg-purple-100 text-purple-700",
+      "out for delivery": "bg-orange-100 text-orange-700",
+      delivered: "bg-green-100 text-green-700",
+    };
+
+    return map[status?.toLowerCase()] || "bg-gray-100 text-gray-600";
+  };
+
+  /* 🔥 PAYMENT BADGE */
+  const getPaymentBadge = (method) => {
+    if (method === "cod") {
+      return "bg-yellow-100 text-yellow-700";
+    }
+    return "bg-green-100 text-green-700";
+  };
+
   const getExpectedDelivery = (order) => {
-    if (!order.createdAt || !order.expecteddeliverydate) return "";
+    if (!order.createdAt) return "";
 
     const baseDate = order.createdAt.toDate();
-    const daysToAdd = Number(order.expecteddeliverydate);
 
-    const deliveryDate = new Date(baseDate);
-    deliveryDate.setDate(baseDate.getDate() + daysToAdd);
+    if (order.estimatedDays) {
+      const deliveryDate = new Date(baseDate);
+      deliveryDate.setDate(baseDate.getDate() + order.estimatedDays);
 
-    return deliveryDate.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-    });
+      return deliveryDate.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+      });
+    }
+
+    if (order.expecteddeliverydate) {
+      const deliveryDate = new Date(baseDate);
+      deliveryDate.setDate(
+        baseDate.getDate() + Number(order.expecteddeliverydate)
+      );
+
+      return deliveryDate.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+      });
+    }
+
+    return "";
+  };
+
+  const getDeliveryRange = (order) => {
+    if (!order.estimatedDays) return null;
+    return `Arriving in ${order.estimatedDays}-${order.estimatedDays + 1} days`;
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-5xl mx-auto">
-        {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">📦 My Orders</h2>
         </div>
 
-        {/* LOADING */}
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -84,18 +122,35 @@ export default function OrdersList() {
                   key={order.id}
                   className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-5 border"
                 >
-                  {/* TOP BAR */}
+                  {/* 🔥 TOP BAR */}
                   <div className="flex justify-between items-center mb-4">
                     <p className="font-semibold text-gray-800">
                       Order #{order.id.slice(0, 8).toUpperCase()}
                     </p>
 
-                    <span className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700">
-                      ✔ Confirmed
-                    </span>
+                    <div className="flex gap-2">
+                      {/* STATUS BADGE */}
+                      <span
+                        className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusBadge(
+                          order.shippingStatus || order.status
+                        )}`}
+                      >
+                        {order.shippingStatus || order.status}
+                      </span>
+
+                      {/* PAYMENT BADGE */}
+                      <span
+                        className={`text-xs font-semibold px-3 py-1 rounded-full ${getPaymentBadge(
+                          order.paymentMethod
+                        )}`}
+                      >
+                        {order.paymentMethod === "cod"
+                          ? "COD 💰"
+                          : "Paid 💳"}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* MAIN CONTENT */}
                   <div className="flex gap-4">
                     <img
                       src={order.items?.[0]?.imageUrl}
@@ -114,7 +169,6 @@ export default function OrdersList() {
                         )}
                       </p>
 
-                      {/* PRICE GRID */}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                         <p className="text-gray-600">
                           Product Total: <b>₹{order.total}</b>
@@ -136,7 +190,6 @@ export default function OrdersList() {
                         </p>
                       </div>
 
-                      {/* DELIVERY INFO */}
                       <div className="bg-gray-50 rounded-lg p-3 mt-2 space-y-1">
                         <p className="text-sm text-gray-700">
                           🚚 Expected Delivery:{" "}
@@ -145,12 +198,29 @@ export default function OrdersList() {
                           </span>
                         </p>
 
+                        {getDeliveryRange(order) && (
+                          <p className="text-xs text-green-500">
+                            {getDeliveryRange(order)}
+                          </p>
+                        )}
+
                         <p className="text-sm text-gray-700">
                           📦 Courier:{" "}
                           <span className="font-medium">
                             {order.courier || "Not Assigned"}
                           </span>
                         </p>
+
+                        {order.trackingUrl && (
+                          <a
+                            href={order.trackingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block mt-2 text-xs text-blue-600 underline"
+                          >
+                            🔍 Track Order
+                          </a>
+                        )}
                       </div>
 
                       {isFree && (
