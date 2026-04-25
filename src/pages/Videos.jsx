@@ -55,7 +55,7 @@ export default function Videos() {
               <video
                 src={video.videoUrl}
                 controls
-                className="w-full h-[200px] object-cover"
+                className="w-full h-[200px] object-contain bg-black"
                 onLoadedData={() =>
                   setLoadingVideo((prev) => ({
                     ...prev,
