@@ -268,120 +268,116 @@ async function createShiprocketOrder(order) {
 CREATE COD ORDER
 ===================================================== */
 
-exports.createCODOrder = onCall(
-  { region: "asia-south1" },
-  async ({ data }) => {
-    try {
-      const { orderId } = data;
+exports.createCODOrder = onCall({ region: "asia-south1" }, async ({ data }) => {
+  try {
+    const { orderId } = data;
 
-      const orderRef = db.collection("orders").doc(orderId);
-      const snap = await orderRef.get();
+    const orderRef = db.collection("orders").doc(orderId);
+    const snap = await orderRef.get();
 
-      if (!snap.exists) {
-        throw new HttpsError("not-found", "Order not found");
-      }
-
-      // 🔥 FORCE COD
-      const orderData = {
-        id: orderId,
-        ...snap.data(),
-        paymentMethod: "cod",
-      };
-
-      /* ---------------- CREATE SHIPROCKET ORDER ---------------- */
-      const shipment = await createShiprocketOrder(orderData);
-
-      const shipmentId = shipment.shipment_id;
-      const shiprocketOrderId = shipment.order_id;
-
-      // ✅ USE SHIPROCKET RESPONSE DIRECTLY
-      let awbData = {
-        awb_code: shipment.awb_code || "",
-        courier_name: shipment.courier_name || "",
-      };
-
-      /* ---------------- TRY ASSIGN COURIER (SAFE) ---------------- */
-      try {
-        const awb = await assignCourier(shipmentId);
-        awbData = awb.response.data;
-      } catch (err) {
-        const msg = err.response?.data?.message;
-
-        if (msg?.includes("Cannot reassign")) {
-          console.log("Courier already assigned by Shiprocket ✅");
-        } else {
-          console.error("ASSIGN COURIER ERROR:", msg);
-          // ❗ DO NOT throw
-        }
-      }
-
-      /* ---------------- LABEL ---------------- */
-      let label = null;
-      try {
-        label = await generateLabel(shipmentId);
-      } catch (err) {
-        console.error("LABEL ERROR:", err.response?.data || err.message);
-      }
-
-      /* ---------------- INVOICE ---------------- */
-      let invoice = null;
-      try {
-        invoice = await generateInvoice(shiprocketOrderId);
-      } catch (err) {
-        console.error("INVOICE ERROR:", err.response?.data || err.message);
-      }
-
-      /* ---------------- PICKUP ---------------- */
-      let pickup = null;
-      try {
-        pickup = await schedulePickup(shipmentId);
-      } catch (err) {
-        const msg = err.response?.data?.message;
-
-        if (msg === "Already in Pickup Queue.") {
-          console.log("Pickup already scheduled ✅");
-        } else {
-          console.error("PICKUP ERROR:", msg);
-        }
-      }
-
-      /* ---------------- UPDATE FIRESTORE ---------------- */
-      await orderRef.update({
-        paymentMethod: "cod",
-        paymentStatus: "pending",
-        status: "confirmed",
-
-        shiprocketOrderId,
-        shipmentId,
-
-        awb: awbData?.awb_code || "",
-        courier: awbData?.courier_name || "",
-
-        shippingLabel: label?.label_url || "",
-        shippingInvoice: invoice?.invoice_url || "",
-
-        pickupToken: pickup?.pickup_token_number || "",
-
-        shippingStatus: "pickup_scheduled",
-      });
-
-      /* ---------------- EMAILS ---------------- */
-      await sendOrderEmail(orderData);
-      await sendAdminEmail(orderData);
-
-      return { success: true };
-
-    } catch (err) {
-      console.error(
-        "COD ERROR FULL:",
-        JSON.stringify(err.response?.data || err.message, null, 2)
-      );
-
-      // 🔥 DO NOT FAIL FRONTEND IF ORDER ALREADY CREATED
-      return { success: true };
+    if (!snap.exists) {
+      throw new HttpsError("not-found", "Order not found");
     }
+
+    // 🔥 FORCE COD
+    const orderData = {
+      id: orderId,
+      ...snap.data(),
+      paymentMethod: "cod",
+    };
+
+    /* ---------------- CREATE SHIPROCKET ORDER ---------------- */
+    const shipment = await createShiprocketOrder(orderData);
+
+    const shipmentId = shipment.shipment_id;
+    const shiprocketOrderId = shipment.order_id;
+
+    // ✅ USE SHIPROCKET RESPONSE DIRECTLY
+    let awbData = {
+      awb_code: shipment.awb_code || "",
+      courier_name: shipment.courier_name || "",
+    };
+
+    /* ---------------- TRY ASSIGN COURIER (SAFE) ---------------- */
+    try {
+      const awb = await assignCourier(shipmentId);
+      awbData = awb.response.data;
+    } catch (err) {
+      const msg = err.response?.data?.message;
+
+      if (msg?.includes("Cannot reassign")) {
+        console.log("Courier already assigned by Shiprocket ✅");
+      } else {
+        console.error("ASSIGN COURIER ERROR:", msg);
+        // ❗ DO NOT throw
+      }
+    }
+
+    /* ---------------- LABEL ---------------- */
+    let label = null;
+    try {
+      label = await generateLabel(shipmentId);
+    } catch (err) {
+      console.error("LABEL ERROR:", err.response?.data || err.message);
+    }
+
+    /* ---------------- INVOICE ---------------- */
+    let invoice = null;
+    try {
+      invoice = await generateInvoice(shiprocketOrderId);
+    } catch (err) {
+      console.error("INVOICE ERROR:", err.response?.data || err.message);
+    }
+
+    /* ---------------- PICKUP ---------------- */
+    let pickup = null;
+    try {
+      pickup = await schedulePickup(shipmentId);
+    } catch (err) {
+      const msg = err.response?.data?.message;
+
+      if (msg === "Already in Pickup Queue.") {
+        console.log("Pickup already scheduled ✅");
+      } else {
+        console.error("PICKUP ERROR:", msg);
+      }
+    }
+
+    /* ---------------- UPDATE FIRESTORE ---------------- */
+    await orderRef.update({
+      paymentMethod: "cod",
+      paymentStatus: "pending",
+      status: "confirmed",
+
+      shiprocketOrderId,
+      shipmentId,
+
+      awb: awbData?.awb_code || "",
+      courier: awbData?.courier_name || "",
+
+      shippingLabel: label?.label_url || "",
+      shippingInvoice: invoice?.invoice_url || "",
+
+      pickupToken: pickup?.pickup_token_number || "",
+
+      shippingStatus: "pickup_scheduled",
+    });
+
+    /* ---------------- EMAILS ---------------- */
+    await sendOrderEmail(orderData);
+    await sendAdminEmail(orderData);
+
+    return { success: true };
+  } catch (err) {
+    console.error(
+      "COD ERROR FULL:",
+      JSON.stringify(err.response?.data || err.message, null, 2),
+    );
+
+    // 🔥 DO NOT FAIL FRONTEND IF ORDER ALREADY CREATED
+    return { success: true };
   }
-);
+});
 
 /* =====================================================
 ASSIGN COURIER
@@ -898,27 +894,63 @@ exports.verifyRazorpayPayment = onCall(
 SHIPROCKET WEBHOOK
 ===================================================== */
 
-exports.shiprocketWebhook = onRequest(
-  { region: "asia-south1" },
+exports.orderTrackingWebhook = onRequest(
+  {
+    region: "asia-south1",
+    cors: true,
+  },
   async (req, res) => {
     try {
-      if (req.method !== "POST") {
-        return res.status(200).send("Webhook active");
+      /* 🔥 CORS */
+      res.set("Access-Control-Allow-Origin", "*");
+      res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.set("Access-Control-Allow-Headers", "*");
+
+      /* 🔥 PREFLIGHT */
+      if (req.method === "OPTIONS") {
+        return res.status(204).send("");
       }
 
-      const data = req.body;
+      /* 🔥 HEALTH CHECK */
+      if (req.method === "GET") {
+        return res.status(200).json({
+          success: true,
+          message: "Webhook active",
+        });
+      }
+
+      /* 🔥 ACCEPT ALL NON-POST VALIDATION REQUESTS */
+      if (req.method !== "POST") {
+        return res.status(200).json({
+          success: true,
+          message: "Validation successful",
+        });
+      }
+
+      const data = req.body || {};
 
       console.log("Shiprocket Webhook:", data);
 
       const awb = data?.awb;
-      const status = data?.current_status;
-      const courier = data?.courier_name;
-      const trackingUrl = data?.tracking_url;
-      const location = data?.location;
-      const activity = data?.activity;
 
+      // 🔥 NORMALIZE STATUS
+      const rawStatus = data?.current_status || "unknown";
+
+      const status = rawStatus.toLowerCase().replace(/\s+/g, "_");
+
+      const courier = data?.courier_name || "";
+      const trackingUrl = data?.tracking_url || "";
+      const location = data?.location || "";
+      const activity = data?.activity || "";
+
+      /* 🔥 SHIPROCKET TEST REQUEST */
       if (!awb) {
-        return res.status(400).send("Missing AWB");
+        console.log("Webhook validation request received");
+
+        return res.status(200).json({
+          success: true,
+          message: "Webhook validation successful",
+        });
       }
 
       const snapshot = await db
@@ -929,24 +961,28 @@ exports.shiprocketWebhook = onRequest(
 
       if (snapshot.empty) {
         console.log("Order not found for AWB:", awb);
-        return res.status(404).send("Order not found");
+
+        return res.status(200).json({
+          success: true,
+          message: "Webhook received",
+        });
       }
 
       const orderDoc = snapshot.docs[0];
 
-      /* TRACKING HISTORY ENTRY */
+      /* 🔥 TRACKING HISTORY ENTRY */
 
       const trackingUpdate = {
-        status: status || "unknown",
-        location: location || "",
-        activity: activity || "",
+        status,
+        location,
+        activity,
         time: admin.firestore.FieldValue.serverTimestamp(),
       };
 
       await orderDoc.ref.update({
-        shippingStatus: status || "unknown",
-        courierName: courier || "",
-        trackingUrl: trackingUrl || "",
+        shippingStatus: status,
+        courierName: courier,
+        trackingUrl: trackingUrl,
         lastTrackingUpdate: admin.firestore.FieldValue.serverTimestamp(),
 
         trackingHistory: admin.firestore.FieldValue.arrayUnion(trackingUpdate),
@@ -954,10 +990,19 @@ exports.shiprocketWebhook = onRequest(
 
       console.log("Tracking updated:", status);
 
-      return res.status(200).send("Webhook processed");
+      return res.status(200).json({
+        success: true,
+        message: "Webhook processed",
+        shippingStatus: status,
+      });
     } catch (err) {
-      console.error("Shiprocket Webhook Error:", err);
-      return res.status(500).send("Server error");
+      console.error("Webhook Error:", err);
+
+      return res.status(200).json({
+        success: false,
+        message: "Webhook handled",
+        error: err.message,
+      });
     }
   },
 );

@@ -7,6 +7,7 @@ import {
   getDocs,
   limit,
   startAfter,
+  onSnapshot,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
@@ -22,30 +23,35 @@ export default function OrdersList() {
   useEffect(() => {
     if (!user) return;
 
-    fetchOrders();
+    const unsubscribe = fetchOrders();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [user]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = () => {
     try {
       const q = query(
         collection(db, "orders"),
         where("userId", "==", user.uid),
-        where("status", "==", "confirmed"),
         orderBy("createdAt", "desc"),
         limit(3), // 🔥 first 3 orders
       );
 
-      const snap = await getDocs(q);
+      const unsubscribe = onSnapshot(q, (snap) => {
+        const data = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
 
-      const data = snap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
+        setOrders(data);
+        setLastDoc(snap.docs[snap.docs.length - 1]);
+        setHasMore(snap.docs.length === 3);
+        setLoading(false);
+      });
 
-      setOrders(data);
-      setLastDoc(snap.docs[snap.docs.length - 1]);
-      setHasMore(snap.docs.length === 3);
-      setLoading(false);
+      return unsubscribe;
     } catch (err) {
       console.error(err);
       setLoading(false);
@@ -58,9 +64,16 @@ export default function OrdersList() {
   const getStatusBadge = (status) => {
     const map = {
       confirmed: "bg-blue-100 text-blue-700",
-      shipped: "bg-purple-100 text-purple-700",
-      "out for delivery": "bg-orange-100 text-orange-700",
+
+      pickup_scheduled: "bg-yellow-100 text-yellow-700",
+
+      in_transit: "bg-purple-100 text-purple-700",
+
+      out_for_delivery: "bg-orange-100 text-orange-700",
+
       delivered: "bg-green-100 text-green-700",
+
+      cancelled: "bg-red-100 text-red-700",
     };
 
     return map[status?.toLowerCase()] || "bg-gray-100 text-gray-600";
@@ -113,7 +126,6 @@ export default function OrdersList() {
       const q = query(
         collection(db, "orders"),
         where("userId", "==", user.uid),
-        where("status", "==", "confirmed"),
         orderBy("createdAt", "desc"),
         startAfter(lastDoc),
         limit(3),
@@ -159,6 +171,8 @@ export default function OrdersList() {
     if (!order.estimatedDays) return null;
     return `Arriving in ${order.estimatedDays}-${order.estimatedDays + 1} days`;
   };
+
+  console.log(orders);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -207,7 +221,9 @@ export default function OrdersList() {
                           order.shippingStatus || order.status,
                         )}`}
                       >
-                        {order.shippingStatus || order.status}
+                        {(order.shippingStatus || order.status)
+                          ?.replaceAll("_", " ")
+                          ?.toUpperCase()}
                       </span>
 
                       {/* PAYMENT BADGE */}
@@ -310,6 +326,7 @@ export default function OrdersList() {
           </div>
         )}
       </div>
+
       {hasMore && (
         <div className="text-center mt-6">
           <button

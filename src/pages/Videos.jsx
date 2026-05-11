@@ -53,8 +53,10 @@ export default function Videos() {
               )}
 
               <video
-                src={video.videoUrl}
                 controls
+                playsInline
+                preload="metadata"
+                webkit-playsinline="true"
                 className="w-full h-[200px] object-contain bg-black"
                 onLoadedData={() =>
                   setLoadingVideo((prev) => ({
@@ -62,7 +64,16 @@ export default function Videos() {
                     [video.id]: false,
                   }))
                 }
-              />
+                onError={() =>
+                  setLoadingVideo((prev) => ({
+                    ...prev,
+                    [video.id]: false,
+                  }))
+                }
+              >
+                <source src={video.videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </div>
 
             {/* CONTENT */}
