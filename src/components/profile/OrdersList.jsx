@@ -172,7 +172,6 @@ export default function OrdersList() {
     return `Arriving in ${order.estimatedDays}-${order.estimatedDays + 1} days`;
   };
 
-  console.log(orders);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -293,7 +292,7 @@ export default function OrdersList() {
                         <p className="text-sm text-gray-700">
                           📦 Courier:{" "}
                           <span className="font-medium">
-                            {order.courier || "Not Assigned"}
+                            {order.courierName || order.courier || "Not Assigned"}
                           </span>
                         </p>
 

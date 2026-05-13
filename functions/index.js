@@ -1008,6 +1008,66 @@ exports.orderTrackingWebhook = onRequest(
 );
 
 /* =====================================================
+ SYNCORDERSTATUS FROM SHIPROCKET
+===================================================== */
+
+exports.syncOrderStatus = onRequest(
+  { region: "asia-south1" },
+  async (req, res) => {
+    try {
+      const token = await getShiprocketToken();
+
+      const ordersSnap = await db.collection("orders").get();
+
+      for (const docSnap of ordersSnap.docs) {
+        const order = docSnap.data();
+
+        if (!order.awb) continue;
+
+        try {
+          const response = await axios.get(
+            `https://apiv2.shiprocket.in/v1/external/courier/track/awb/${order.awb}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          const shipment = response.data?.tracking_data?.shipment_track?.[0];
+
+          if (!shipment) continue;
+
+          const status = shipment.current_status
+            ?.toLowerCase()
+            ?.replace(/\s+/g, "_");
+
+          await docSnap.ref.update({
+            shippingStatus: status,
+            trackingUrl: response.data?.tracking_data?.track_url || "",
+            courierName: shipment.courier_name || order.courier || "",
+            lastTrackingUpdate: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          console.log(`Updated ${docSnap.id} -> ${status}`);
+        } catch (err) {
+          console.error(
+            "Track Error:",
+            order.awb,
+            err.response?.data || err.message,
+          );
+        }
+      }
+
+      return res.status(200).send("Orders synced");
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send("Sync failed");
+    }
+  },
+);
+
+/* =====================================================
 CONTACT FORM EMAIL NOTIFICATION
 ===================================================== */
 

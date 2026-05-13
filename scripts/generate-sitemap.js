@@ -30,4 +30,3 @@ ${allUrls
 
 fs.writeFileSync("./public/sitemap.xml", xml);
 
-console.log("✅ Sitemap generated successfully");
