@@ -16,20 +16,28 @@ export const AuthProvider = ({ children }) => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const ref = doc(db, "users", firebaseUser.uid);
+
         const snap = await getDoc(ref);
 
-        // 🔥 Ensure user document exists
         if (!snap.exists()) {
           await setDoc(ref, {
             email: firebaseUser.email,
             createdAt: serverTimestamp(),
-            cart: [], // ✅ initialize cart
+            cart: [],
           });
         }
 
         setUser(firebaseUser);
       } else {
-        setUser(null);
+        // CHECK PHONE LOGIN
+
+        const phoneUser = localStorage.getItem("phoneUser");
+
+        if (phoneUser) {
+          setUser(JSON.parse(phoneUser));
+        } else {
+          setUser(null);
+        }
       }
 
       setLoading(false);
@@ -40,7 +48,13 @@ export const AuthProvider = ({ children }) => {
 
   /* ---------------- LOGOUT ---------------- */
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch {}
+
+    localStorage.removeItem("phoneUser");
+
+    setUser(null);
   };
 
   return (
