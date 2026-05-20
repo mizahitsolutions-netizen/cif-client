@@ -43,24 +43,36 @@ const BestSellers = () => {
 
   const handleBuyNow = (product) => {
     const minQty = getMinimumQty(product.packageType);
+
     const qty = minQty;
 
-    if (!user) {
+    const phoneUser = localStorage.getItem("phoneUser");
+
+    const loggedUser = user || (phoneUser ? JSON.parse(phoneUser) : null);
+
+    if (!loggedUser) {
       openLogin();
-      toast("Please login to continue", { icon: "🔒" });
+
+      toast("Please login to continue", {
+        icon: "🔒",
+      });
+
       return;
     }
 
-    addToCart(product, qty, { openDrawer: false });
+    addToCart(product, qty, {
+      openDrawer: false,
+    });
+
     navigate("/checkout");
+
     window.scrollTo(0, 0);
   };
 
-
-const displayProducts =
-  products.length > 10
-    ? [...products, ...products] // for smooth scroll
-    : products;
+  const displayProducts =
+    products.length > 10
+      ? [...products, ...products] // for smooth scroll
+      : products;
 
   return (
     <section className="relative max-w-7xl mx-auto px-6 py-16 overflow-hidden bg-gradient-to-br from-green-100 via-yellow-50 to-white">

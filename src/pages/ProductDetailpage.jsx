@@ -192,14 +192,24 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = () => {
-    if (!user) {
+    const phoneUser = localStorage.getItem("phoneUser");
+
+    const loggedUser = user || (phoneUser ? JSON.parse(phoneUser) : null);
+
+    if (!loggedUser) {
       openLogin();
-      toast("Please login to continue", { icon: "🔒" });
+
+      toast("Please login to continue", {
+        icon: "🔒",
+      });
+
       return;
     }
 
     handleAddToCart();
+
     navigate("/checkout");
+
     window.scrollTo(0, 0);
   };
 

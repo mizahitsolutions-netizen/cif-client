@@ -64,13 +64,23 @@ const CartDrawer = ({ open, onClose }) => {
   const handleCheckout = () => {
     onClose();
 
-    if (!user) {
+    const phoneUser = localStorage.getItem("phoneUser");
+
+    const currentUser = user || (phoneUser ? JSON.parse(phoneUser) : null);
+
+    if (!currentUser) {
       openLogin();
-      toast("Please login to continue", { icon: "🔒" });
+
+      toast("Please login to continue", {
+        icon: "🔒",
+      });
+
       return;
     }
 
     navigate("/checkout");
+
+    window.scrollTo(0, 0);
   };
 
   return (

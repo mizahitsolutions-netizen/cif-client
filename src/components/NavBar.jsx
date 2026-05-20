@@ -22,6 +22,11 @@ const NavBar = () => {
 
   const profileRef = useRef(null);
 
+  const storedPhoneUser = localStorage.getItem("phoneUser");
+
+  const currentUser =
+    user || (storedPhoneUser ? JSON.parse(storedPhoneUser) : null);
+
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
   /* CLOSE PROFILE ON OUTSIDE CLICK */
@@ -108,7 +113,7 @@ const NavBar = () => {
               />
             </Link>
             {/* LOGIN / PROFILE */}
-            {!user ? (
+            {!currentUser  ? (
               <button
                 onClick={openLogin}
                 className="hidden md:flex items-center gap-2 border border-white text-white px-4 py-2 rounded-full hover:bg-black hover:text-white transition cursor-pointer"
@@ -237,7 +242,7 @@ const NavBar = () => {
               Profile
             </NavLink>
 
-            {!user && (
+            {!currentUser  && (
               <button
                 onClick={() => {
                   openLogin();

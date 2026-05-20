@@ -184,9 +184,21 @@ export default function SignupForm({ onSuccess }) {
 
       setLoading(true);
 
+      const formattedPhone = `+91${phone}`;
+
+      // CHECK DUPLICATE FIRST
+
+      const existing = await getDoc(doc(db, "phoneUsers", formattedPhone));
+
+      if (existing.exists()) {
+        toast.error("Phone number already registered");
+
+        return;
+      }
+
       setupRecaptcha();
 
-      const formattedPhone = `+91${phone}`;
+      // const formattedPhone = `+91${phone}`;
 
       const appVerifier = window.recaptchaVerifier;
 
@@ -216,69 +228,75 @@ export default function SignupForm({ onSuccess }) {
   /* VERIFY OTP */
   /* -------------------------------- */
 
-const handleVerifyOTP = async () => {
-  try {
-    if (!confirmationResult) {
-      toast.error("Request OTP again");
-      return;
+  const handleVerifyOTP = async () => {
+    try {
+      if (!confirmationResult) {
+        toast.error("Request OTP again");
+        return;
+      }
+
+      if (!password || !confirmPassword) {
+        toast.error("Enter password");
+        return;
+      }
+
+      if (password.length < 6) {
+        toast.error("Password must be at least 6 characters");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+
+      setLoading(true);
+
+      // CHECK IF NUMBER EXISTS
+
+      const phoneRef = doc(db, "phoneUsers", `+91${phone}`);
+
+      const existing = await getDoc(phoneRef);
+
+      if (existing.exists()) {
+        toast.error("Phone number already registered");
+
+        setLoading(false);
+
+        return;
+      }
+
+      // Verify OTP
+      const res = await confirmationResult.confirm(otp);
+
+      // Save user
+      await setDoc(
+        doc(db, "phoneUsers", res.user.phoneNumber),
+        {
+          uid: res.user.uid,
+          phone: res.user.phoneNumber,
+          password,
+          provider: "phone",
+          createdAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+
+      toast.success("Phone verified 🎉");
+
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate("/profile");
+      }
+    } catch (err) {
+      console.error(err);
+
+      toast.error(getErrorMessage(err.code) || "Verification failed");
+    } finally {
+      setLoading(false);
     }
-
-    if (otp.length !== 6) {
-      toast.error("Enter valid 6-digit OTP");
-      return;
-    }
-
-    if (!password || !confirmPassword) {
-      toast.error("Enter password");
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    setLoading(true);
-
-    // Verify OTP
-    const res = await confirmationResult.confirm(otp);
-
-    // Save user
-    await setDoc(
-      doc(db, "phoneUsers", res.user.phoneNumber),
-      {
-        uid: res.user.uid,
-        phone: res.user.phoneNumber,
-        password,
-        provider: "phone",
-        createdAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
-
-    toast.success("Phone verified 🎉");
-
-    if (onSuccess) {
-      onSuccess();
-    } else {
-      navigate("/profile");
-    }
-  } catch (err) {
-    console.error(err);
-
-    toast.error(
-      getErrorMessage(err.code) ||
-        "Verification failed"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   /* -------------------------------- */
   /* UI */
