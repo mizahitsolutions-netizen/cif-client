@@ -10,7 +10,11 @@ import CartDrawer from "./CartDrawer";
 import AuthModal from "./AuthModal";
 import ProfileDropdown from "./ProfileDropdown";
 
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+
+import { signOut } from "firebase/auth";
+
+import { auth } from "../firebase";
 
 const NavBar = () => {
   const { cart, cartOpen, setCartOpen } = useCart();
@@ -22,12 +26,32 @@ const NavBar = () => {
 
   const profileRef = useRef(null);
 
+  const navigate = useNavigate();
+
   const storedPhoneUser = localStorage.getItem("phoneUser");
 
   const currentUser =
     user || (storedPhoneUser ? JSON.parse(storedPhoneUser) : null);
 
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const handleLogout = async () => {
+    try {
+      if (user) {
+        await signOut(auth);
+      }
+
+      localStorage.removeItem("phoneUser");
+
+      setProfileOpen(false);
+
+      setMobileOpen(false);
+
+      navigate("/");
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   /* CLOSE PROFILE ON OUTSIDE CLICK */
   useEffect(() => {
@@ -113,7 +137,7 @@ const NavBar = () => {
               />
             </Link>
             {/* LOGIN / PROFILE */}
-            {!currentUser  ? (
+            {!currentUser ? (
               <button
                 onClick={openLogin}
                 className="hidden md:flex items-center gap-2 border border-white text-white px-4 py-2 rounded-full hover:bg-black hover:text-white transition cursor-pointer"
@@ -242,16 +266,25 @@ const NavBar = () => {
               Profile
             </NavLink>
 
-            {!currentUser  && (
+            {!currentUser ? (
               <button
                 onClick={() => {
                   openLogin();
                   setMobileOpen(false);
                 }}
-                className="border border-black px-4 py-2 rounded-full hover:bg-black hover:text-white"
+                className="border border-black px-4 py-2 rounded-full hover:bg-black hover:text-white transition"
               >
                 Login
               </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleLogout}
+                  className="border border-red-500 text-red-500 px-4 py-2 rounded-full hover:bg-red-500 hover:text-white transition"
+                >
+                  Logout
+                </button>
+              </>
             )}
           </div>
         </div>
