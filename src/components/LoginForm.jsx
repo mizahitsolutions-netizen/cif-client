@@ -76,7 +76,6 @@ export default function LoginForm({ onSuccess }) {
 
       const user = await signInWithEmailAndPassword(auth, email, password);
 
-      console.log(user);
 
       toast.success("Logged in successfully 🎉");
 
